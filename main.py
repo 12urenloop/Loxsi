@@ -4,8 +4,15 @@ import json
 import aiohttp
 import websockets
 import websockets.exceptions
+import configparser
 
 new_data: asyncio.Event = asyncio.Event()
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+lap_source = config['loxsi']['lap_source']
+interval = int(config['loxsi']['interval'])
+
 data = None
 
 
@@ -26,7 +33,7 @@ async def get_teams(client):
     return await _get_data(client, 'team')
 
 
-async def fetch(interval: int):
+async def fetch():
     global data
     async with aiohttp.ClientSession() as client:
         while True:
@@ -34,8 +41,12 @@ async def fetch(interval: int):
                 get_laps(client), get_lap_sources(client), get_teams(client)
             )
 
+            lap_sources = {source['name']: source['id'] for source in lap_sources}
+            lap_source_id = lap_sources[lap_source]
+
             team_count = {
-                team['name']: sum([lap['teamId'] == team['id'] for lap in laps]) for team in teams
+                team['name']: sum([lap['teamId'] == team['id'] and lap['lapSourceId'] == lap_source_id for lap in laps])
+                for team in teams
             }
 
             data = team_count
@@ -64,7 +75,7 @@ async def serve():
 
 async def main():
     asyncio.create_task(serve())
-    asyncio.create_task(fetch(5))
+    asyncio.create_task(fetch())
 
     await asyncio.Future()
 
