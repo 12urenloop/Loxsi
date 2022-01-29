@@ -1,84 +1,98 @@
 import asyncio
-import json
+from typing import List, Dict
 
-import aiohttp
-import websockets
 import websockets.exceptions
-import configparser
+from fastapi import FastAPI, Request, Depends
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.websockets import WebSocket
+from httpx import AsyncClient, Response
 
-new_data: asyncio.Event = asyncio.Event()
-config = configparser.ConfigParser()
-config.read('config.ini')
+from basic_auth import admin
+from models import Lap, LapSource, Team, Count
+from queue_manager import QueueManager
+from settings import settings
 
-lap_source = config['loxsi']['lap_source']
-interval = int(config['loxsi']['interval'])
+app = FastAPI(
+    title='Loxsi',
+    description='Data proxy for the Telraam application',
+    version="0.69.0",
+)
+templates = Jinja2Templates(directory='templates')
+queue_manager = QueueManager()
 
-data = None
-
-
-async def _get_data(client, endpoint):
-    async with client.request('GET', f'http://10.1.0.200:8080/{endpoint}') as request:
-        return await request.json()
-
-
-async def get_laps(client):
-    return await _get_data(client, 'lap')
-
-
-async def get_lap_sources(client):
-    return await _get_data(client, 'lap-source')
-
-
-async def get_teams(client):
-    return await _get_data(client, 'team')
+active = "None"
 
 
 async def fetch():
-    global data
-    async with aiohttp.ClientSession() as client:
+    async with AsyncClient() as client:
+        async def _fetch(endpoint: str):
+            response: Response = await client.get(f'http://127.0.0.1:8080/{endpoint}')
+            return response.json()
+
         while True:
-            laps, lap_sources, teams = await asyncio.gather(
-                get_laps(client), get_lap_sources(client), get_teams(client)
-            )
+            try:
+                laps: List[Dict] = await _fetch('lap')
+                teams: List[Dict] = await _fetch('team')
+                lap_sources: List[Dict] = await _fetch('lap-source')
 
-            lap_sources = {source['name']: source['id'] for source in lap_sources}
-            lap_source_id = lap_sources[lap_source]
+                teams: Dict[int, Team] = {team['id']: Team(**team) for team in teams}
+                lap_sources: Dict[int, LapSource] = {
+                    lap_source['id']: LapSource(**lap_source) for lap_source in lap_sources
+                }
+                laps: List[Lap] = [
+                    Lap(team=teams[lap['teamId']], lap_source=lap_sources[lap['lapSourceId']], **lap) for lap in laps
+                ]
 
-            team_count = {
-                team['name']: sum([lap['teamId'] == team['id'] and lap['lapSourceId'] == lap_source_id for lap in laps])
-                for team in teams
-            }
+                counts: List[Dict] = [
+                    Count(count=len([lap for lap in laps if lap.team == team]), team=team).dict() for team in
+                    teams.values()
+                ]
 
-            data = team_count
+                await queue_manager.broadcast(counts)
+            except Exception as e:
+                print(e)
 
-            new_data.set()
-            new_data.clear()
-            await asyncio.sleep(interval)
+            await asyncio.sleep(1)
 
 
-async def push(websocket):
+@app.on_event("startup")
+async def startup():
+    asyncio.get_event_loop().create_task(fetch())
+
+
+@app.get('/api/active/source')
+async def api(_=Depends(admin)):
+    return {'name': active}
+
+
+@app.get('/api/active/connections')
+async def api(_=Depends(admin)):
+    return {'count': await queue_manager.count()}
+
+
+@app.post('/api/use/{name}')
+async def api_post(name: str, _=Depends(admin)):
+    global active
+    print(name)
+    active = name
+    return {'ok': 1}
+
+
+@app.get('/admin', response_class=HTMLResponse)
+async def admin(request: Request, _=Depends(admin)):
+    return templates.TemplateResponse('admin.html', {'request': request, 'sources': settings.sources, 'title': "Hoi"})
+
+
+@app.websocket('/feed')
+async def feed(websocket: WebSocket):
+    await websocket.accept()
+    queue = await queue_manager.add()
     try:
-        if data:
-            await websocket.send(json.dumps(data))
         while True:
-            await new_data.wait()
-            await websocket.send(json.dumps(data))
+            data: Dict = await queue.get()
+            await websocket.send_json(data)
     except websockets.exceptions.ConnectionClosedOK:
         pass
-
-
-async def serve():
-    print("Started websocket server.")
-    async with websockets.serve(push, "localhost", 8081):
-        await asyncio.Future()
-
-
-async def main():
-    asyncio.create_task(serve())
-    asyncio.create_task(fetch())
-
-    await asyncio.Future()
-
-
-if __name__ == '__main__':
-    asyncio.run(main())
+    finally:
+        await queue_manager.remove(queue)

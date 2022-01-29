@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" class="tui-bg-blue-black">
+<head>
+  <meta charset="UTF-8">
+  <title>Loxsi de Proxy</title>
+  <script src="https://cdn.jsdelivr.net/npm/tuicss@2.1.1/dist/tuicss.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tuicss@2.1.1/dist/tuicss.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%">
+  <div class="row">
+    <div class="col l6 m6 s6">
+      <div class="tui-window" style="margin-bottom: 20px; width: 100%">
+        <fieldset class="tui-fieldset">
+          <legend>Active Source</legend>
+          <span class="tui-fieldset-text right"><span class="last-updated" id="active-source-timer">0</span>s</span>
+          <div id="active-source">
+            Loading...
+          </div>
+        </fieldset>
+        <script>
+            const active_source = document.getElementById('active-source');
+            const active_source_timer = document.getElementById('active-source-timer');
+            setInterval(() => {
+                fetch('api/active/source')
+                    .then(res => res.json())
+                    .then(json => {
+                        active_source.innerText = json.name
+                        active_source_timer.innerText = "0"
+                    })
+            }, 1000)
+        </script>
+      </div>
+    </div>
+    <div class="col l6 m6 s6">
+      <div class="tui-window" style="margin-bottom: 20px; width: 100%">
+        <fieldset class="tui-fieldset">
+          <legend>Active Connections</legend>
+          <span class="tui-fieldset-text right">
+            <span class="last-updated" id="active-connections-timer">0</span>s
+          </span>
+          <div id="active-connections">
+            Loading...
+          </div>
+          <script>
+              const active_connections = document.getElementById('active-connections');
+              const active_connections_timer = document.getElementById('active-connections-timer');
+              setInterval(() => {
+                  fetch('api/active/connections')
+                      .then(res => res.json())
+                      .then(json => {
+                          active_connections.innerText = `Count: ${json.count}`
+                          active_connections_timer.innerText = "0"
+                      })
+              }, 1000)
+          </script>
+        </fieldset>
+      </div>
+    </div>
+    <div class="col l12 m12 s12">
+      <div class="tui-window" style="margin-bottom: 20px; width: 100%">
+        <fieldset class="tui-fieldset">
+          <legend class="center" id="window-title">Source</legend>
+          <div>
+            Select a source to use for Loxsi data
+            <hr class="tui-divider" style="margin-top: 20px">
+            <div class="row">
+              {% for source in sources %}
+                <div class="col l6 m12 s12" style="margin-top: 20px">
+                  <button class="tui-button white-168 white-255-hover" onclick="use(this)"
+                          value="{{ source.name }}">{{ source.name }} ({{ source.url }})
+                  </button>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </fieldset>
+      </div>
+    </div>
+    <div class="col l12 m12 s12">
+      <div class="tui-window black-168" style="width: 100%">
+        <fieldset class="tui-fieldset">
+          <legend class="center" id="window-title">Current Status: WIP</legend>
+          <span class="tui-fieldset-text" id="chart-message">Connecting...</span>
+          <span class="tui-fieldset-text right"><span class="last-updated" id="chart-timer">0</span>s</span>
+          <div class="tui-chart-vertical" style="width: 100%; height: 200px">
+            <div class="tui-chart-display">
+              <div class="tui-chart-value red-168" style="height: 80%;">80%</div>
+              <div class="tui-chart-value green-168" style="height: 30%;">30%</div>
+              <div class="tui-chart-value blue-168" style="height: 50%;">50%</div>
+            </div>
+            <!--<div class="tui-chart-y-axis">
+              <div class="tui-chart-legend">100%</div>
+              <div class="tui-chart-legend">75%</div>
+              <div class="tui-chart-legend">50%</div>
+              <div class="tui-chart-legend">25%</div>
+            </div>-->
+            <div class="tui-chart-x-axis">
+              <div class="tui-chart-legend">t1</div>
+              <div class="tui-chart-legend">t2</div>
+              <div class="tui-chart-legend">t3</div>
+            </div>
+          </div>
+        </fieldset>
+        <script>
+            let websocket = new WebSocket(`ws://${location.host}/feed`);
+
+            websocket.onopen = (_event) => {
+                document.getElementById('chart-message').remove();
+            };
+
+            websocket.onmessage = (event) => {
+                document.getElementById('chart-timer').innerText = "0";
+                console.log(event.data);
+            };
+
+            websocket.onclose = (_event) => {
+                document.getElementById('chart-timer').parentElement.innerText = "Connection Lost ...";
+            }
+        </script>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+    function use(element) {
+        fetch(`/api/use/${element.value}`, {
+            method: "POST"
+        }).then(res => {
+            console.log(res)
+        })
+    }
+
+    const interval = 10
+    setInterval(() => {
+        const counters = document.getElementsByClassName('last-updated')
+        for (let counter of counters) {
+            counter.innerText = (interval / 1000 + parseFloat(counter.innerText)).toFixed(2)
+        }
+    }, interval)
+
+</script>
+
+</body>
+</html>
