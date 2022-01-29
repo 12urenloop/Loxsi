@@ -9,7 +9,7 @@ class LapSource(BaseModel):
 class Team(BaseModel):
     id: int
     name: str
-    batonId: int
+    # batonId: int
 
 
 class Lap(BaseModel):

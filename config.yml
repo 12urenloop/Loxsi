@@ -1,9 +1,6 @@
-sources:
-  - name: 'Telraam'
-    url: 'http://localhost:2000'
-  - name: 'Manual Count'
-    url: 'http://localhost:3000'
-
 admin:
-  name: 'Admin'
-  password: 'Admin2'
+  name: Admin
+  password: Admin2
+source:
+  id: 3
+  name: ELS

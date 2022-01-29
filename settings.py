@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import Optional
 
 import yaml
 
@@ -10,14 +10,23 @@ class AdminUser(BaseModel):
 
 
 class Source(BaseModel):
-    name: str
-    url: str
+    id: int = 0
+    name: Optional[str]
 
 
 class Settings(BaseModel):
     admin: AdminUser
-    sources: List[Source]
+    source: Source = Source()
+    source_file: str
+
+    def persist(self) -> None:
+        with open(self.source_file, 'w') as file:
+            file.write(yaml.dump(self.dict(exclude={'source_file'}), default_flow_style=False))
 
 
-with open('config.yml', 'r') as f:
-    settings = Settings(**yaml.load(f, Loader=yaml.Loader))
+def get_config(source_file: str) -> Settings:
+    with open(source_file, 'r') as file:
+        return Settings(source_file=source_file, **yaml.load(file, Loader=yaml.Loader))
+
+
+settings: Settings = get_config('config.yml')
