@@ -16,6 +16,7 @@ websocket.onopen = (_event) => {
 };
 
 websocket.onmessage = (event) => {
+  console.log(event.data)
   setData(event.data)
 };
 
@@ -95,8 +96,8 @@ function setData(res) {
   }
   const chartElem = document.getElementById('chart');
   const chartLegendElem = document.getElementById('chart-legend');
-  let highestCount = 0
-  highestCount = res.find(t=>t.count > highestCount).count
+  let highestCount = 0;
+  highestCount = res.find(t=>t.count > highestCount)?.count ?? 0
   let colorIdx = 0;
   res.sort((a,b)=>a.team.id - b.team.id).forEach(t =>{
     // Search existing elem
@@ -113,7 +114,7 @@ function setData(res) {
       chartLegendEl.innerText = t.team.name
       chartLegendElem.append(chartLegendEl)
     }
-    chartValueEl.style.height = `${(t.count / highestCount) * 100}%`
+    chartValueEl.style.height = `${(t.count / (highestCount === 0 ? 1 : highestCount)) * 100}%`
     chartValueEl.innerText = t.count;
     colorIdx = (colorIdx + 1) % COLORS.length
   })
