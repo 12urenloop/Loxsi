@@ -7,6 +7,7 @@ import websockets.exceptions
 from fastapi import FastAPI, Request, Depends
 from fastapi.exceptions import HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.websockets import WebSocket
 from httpx import AsyncClient, Response
@@ -69,6 +70,7 @@ async def fetch():
 
             await asyncio.sleep(1)
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.on_event("startup")
 async def startup():
