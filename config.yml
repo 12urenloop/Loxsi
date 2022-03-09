@@ -1,6 +1,8 @@
 admin:
-  name: Admin
-  password: Admin2
+  name: admin
+  password: admin
 source:
   id: 3
   name: ELS
+telraam:
+  base_url: http://127.0.0.1:8080

@@ -34,7 +34,7 @@ admin_publisher = DataPublisher()
 async def fetch():
     async with AsyncClient() as client:
         async def _fetch(endpoint: str):
-            response: Response = await client.get(f'http://127.0.0.1:8080/{endpoint}')
+            response: Response = await client.get(f'{settings.telraam.base_url}/{endpoint}')
             await admin_publisher.publish('telraam-health', 'good')
             return response.json()
 
@@ -81,7 +81,7 @@ async def startup():
 async def api_post(id: int, _=Depends(admin)):
     try:
         async with AsyncClient() as client:
-            lap_sources: Response = await client.get('http://127.0.0.1:8080/lap-source')
+            lap_sources: Response = await client.get(f'{settings.telraam.base_url}/lap-source')
             lap_sources_by_id: Dict[int, LapSource] = {
                 ls.id: ls for ls in [LapSource(**ls) for ls in lap_sources.json()]
             }

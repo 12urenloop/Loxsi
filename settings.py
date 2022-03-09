@@ -13,11 +13,15 @@ class Source(BaseModel):
     id: int = 0
     name: Optional[str]
 
+class Telraam(BaseModel):
+    base_url: str
+
 
 class Settings(BaseModel):
     admin: AdminUser
     source: Source = Source()
     source_file: str
+    telraam: Telraam
 
     def persist(self) -> None:
         with open(self.source_file, 'w') as file:
