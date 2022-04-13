@@ -10,7 +10,7 @@ security = HTTPBasic()
 
 
 async def admin(credentials: Optional[HTTPBasicCredentials] = Depends(security)) -> None:
-    invalid_credentials = HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail='Invalid Credentials')
+    invalid_credentials = HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail='Invalid Credentials', headers={"WWW-Authenticate": "Basic"})
 
     if not credentials:
         raise invalid_credentials
