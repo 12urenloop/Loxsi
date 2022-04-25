@@ -137,10 +137,8 @@ async def feed(websocket: WebSocket):
     await websocket.accept()
     queue = await feed_publisher.add()
     await admin_publisher.publish('active-connections', await admin_publisher.count() + await feed_publisher.count())
-    print('Here First!')
     try:
         while True:
-            print('Here!')
             topic, data = await queue.get()
             await websocket.send_json({'topic': topic, 'data': data})
     except websockets.exceptions.ConnectionClosedOK:
