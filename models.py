@@ -22,3 +22,7 @@ class Lap(BaseModel):
 class Count(BaseModel):
     count: int
     team: Team
+
+
+class Message(BaseModel):
+    message: str | None

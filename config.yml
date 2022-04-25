@@ -1,8 +1,9 @@
 admin:
   name: admin
   password: admin
+message: tetten
 source:
-  id: 3
-  name: ELS
+  id: 1
+  name: simple-lapper
 telraam:
-  base_url: http://127.0.0.1:8080
+  base_url: http://localhost:8080

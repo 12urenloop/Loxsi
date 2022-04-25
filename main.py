@@ -11,12 +11,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.websockets import WebSocket
 from httpx import AsyncClient, Response
-from starlette.status import HTTP_409_CONFLICT, HTTP_502_BAD_GATEWAY
+from starlette.status import HTTP_409_CONFLICT, HTTP_502_BAD_GATEWAY, HTTP_202_ACCEPTED
 
 from basic_auth import admin
 from data_publisher import DataPublisher
-from models import Lap, LapSource, Team, Count
-from queue_manager import QueueManager
+from models import Lap, LapSource, Team, Count, Message
 from settings import settings
 
 app = FastAPI(
@@ -27,7 +26,7 @@ app = FastAPI(
 
 templates = Jinja2Templates(directory='templates')
 
-queue_manager = QueueManager()
+feed_publisher = DataPublisher()
 admin_publisher = DataPublisher()
 
 
@@ -62,23 +61,27 @@ async def fetch():
                     teams_by_id.values()
                 ]
 
-                await queue_manager.broadcast(counts)
+                await feed_publisher.publish('counts', counts)
             except httpx.ConnectError:
                 await admin_publisher.publish('telraam-health', 'bad')
             except Exception as e:
-                print(e)
+                print(type(e))
 
             await asyncio.sleep(1)
 
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 @app.on_event("startup")
 async def startup():
     asyncio.get_event_loop().create_task(fetch())
+    await admin_publisher.publish('active-source', settings.source.dict())
+    await feed_publisher.publish('message', settings.message)
 
 
-@app.post('/api/use/{id}')
-async def api_post(id: int, _=Depends(admin)):
+@app.post('/api/use/{id}', dependencies=[Depends(admin)])
+async def api_post(id: int):
     try:
         async with AsyncClient() as client:
             lap_sources: Response = await client.get(f'{settings.telraam.base_url}/lap-source')
@@ -100,6 +103,13 @@ async def api_post(id: int, _=Depends(admin)):
         raise HTTPException(status_code=HTTP_502_BAD_GATEWAY, detail='Can\'t reach data server')
 
 
+@app.post("/api/message", status_code=HTTP_202_ACCEPTED, dependencies=[Depends(admin)])
+async def post_message(message: Message):
+    settings.message = message.message
+    settings.persist()
+    await feed_publisher.publish('message', message.message)
+
+
 @app.get('/admin', response_class=HTMLResponse)
 async def admin(request: Request, _=Depends(admin)):
     return templates.TemplateResponse('admin.html', {'request': request})
@@ -109,7 +119,7 @@ async def admin(request: Request, _=Depends(admin)):
 async def admin_feed(websocket: WebSocket):
     await websocket.accept()
     queue: Queue = await admin_publisher.add()
-    await admin_publisher.publish('active-connections', await admin_publisher.count() + await queue_manager.count())
+    await admin_publisher.publish('active-connections', await admin_publisher.count() + await feed_publisher.count())
     try:
         while True:
             topic, data = await queue.get()
@@ -118,20 +128,25 @@ async def admin_feed(websocket: WebSocket):
         pass
     finally:
         await admin_publisher.remove(queue)
-        await admin_publisher.publish('active-connections', await admin_publisher.count() + await queue_manager.count())
+        await admin_publisher.publish('active-connections',
+                                      await admin_publisher.count() + await feed_publisher.count())
 
 
 @app.websocket('/feed')
 async def feed(websocket: WebSocket):
     await websocket.accept()
-    queue = await queue_manager.add()
-    await admin_publisher.publish('active-connections', await admin_publisher.count() + await queue_manager.count())
+    queue = await feed_publisher.add()
+    await admin_publisher.publish('active-connections', await admin_publisher.count() + await feed_publisher.count())
+    print('Here First!')
     try:
         while True:
-            data: Dict = await queue.get()
-            await websocket.send_json(data)
+            print('Here!')
+            topic, data = await queue.get()
+            await websocket.send_json({'topic': topic, 'data': data})
     except websockets.exceptions.ConnectionClosedOK:
         pass
     finally:
-        await queue_manager.remove(queue)
-        await admin_publisher.publish('active-connections', await admin_publisher.count() + await queue_manager.count())
+        await feed_publisher.remove(queue)
+        await admin_publisher.publish(
+            'active-connections', await admin_publisher.count() + await feed_publisher.count()
+        )
