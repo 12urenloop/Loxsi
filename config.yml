@@ -5,6 +5,6 @@ freeze: null
 message: null
 source:
   id: -1
-  name: aggregate
+  name: accepted-laps
 telraam:
   base_url: http://172.12.50.21:8080

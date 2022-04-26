@@ -34,7 +34,7 @@ async def get_lap_sources() -> List[Dict]:
     async with AsyncClient() as client:
         lap_sources: Response = await client.get(f'{settings.telraam.base_url}/lap-source')
         lap_sources: List[Dict] = lap_sources.json()
-        lap_sources.append({'id': -1, 'name': 'aggregate'})
+        lap_sources.append({'id': -1, 'name': 'accepted-laps'})
         return lap_sources
 
 
@@ -50,7 +50,7 @@ async def fetch():
                 teams: List[Dict] = await _fetch('team')
                 lap_sources: List[Dict] = await get_lap_sources()
 
-                if settings.source.name == 'aggregate':
+                if settings.source.name == 'accepted-laps':
                     laps: List[Dict] = await _fetch('accepted-laps')
                 else:
                     laps: List[Dict] = await _fetch('lap')
@@ -68,7 +68,7 @@ async def fetch():
                     lap in laps
                 ]
 
-                if settings.source.name != 'aggregate':
+                if settings.source.name != 'accepted-laps':
                     laps: List[Lap] = [lap for lap in laps if lap.lap_source.id == settings.source.id]
 
                 if settings.freeze is not None:
