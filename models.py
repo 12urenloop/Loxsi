@@ -26,3 +26,7 @@ class Count(BaseModel):
 
 class Message(BaseModel):
     message: str | None
+
+
+class FreezeTime(BaseModel):
+    time: int

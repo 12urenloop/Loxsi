@@ -15,7 +15,7 @@ from starlette.status import HTTP_409_CONFLICT, HTTP_502_BAD_GATEWAY, HTTP_202_A
 
 from basic_auth import admin
 from data_publisher import DataPublisher
-from models import Lap, LapSource, Team, Count, Message
+from models import Lap, LapSource, Team, Count, Message, FreezeTime
 from settings import settings
 
 app = FastAPI(
@@ -30,6 +30,14 @@ feed_publisher = DataPublisher()
 admin_publisher = DataPublisher()
 
 
+async def get_lap_sources() -> List[Dict]:
+    async with AsyncClient() as client:
+        lap_sources: Response = await client.get(f'{settings.telraam.base_url}/lap-source')
+        lap_sources: List[Dict] = lap_sources.json()
+        lap_sources.append({'id': -1, 'name': 'aggregate'})
+        return lap_sources
+
+
 async def fetch():
     async with AsyncClient() as client:
         async def _fetch(endpoint: str):
@@ -39,13 +47,18 @@ async def fetch():
 
         while True:
             try:
-                laps: List[Dict] = await _fetch('lap')
                 teams: List[Dict] = await _fetch('team')
-                lap_sources: List[Dict] = await _fetch('lap-source')
+                lap_sources: List[Dict] = await get_lap_sources()
+
+                if settings.source.name == 'aggregate':
+                    laps: List[Dict] = await _fetch('accepted-laps')
+                else:
+                    laps: List[Dict] = await _fetch('lap')
 
                 await admin_publisher.publish('lap-source', lap_sources)
 
                 teams_by_id: Dict[int, Team] = {team['id']: Team(**team) for team in teams}
+
                 lap_sources_by_id: Dict[int, LapSource] = {
                     lap_source['id']: LapSource(**lap_source) for lap_source in lap_sources
                 }
@@ -54,7 +67,12 @@ async def fetch():
                     Lap(team=teams_by_id[lap['teamId']], lap_source=lap_sources_by_id[lap['lapSourceId']], **lap) for
                     lap in laps
                 ]
-                laps: List[Lap] = [lap for lap in laps if lap.lap_source.id == settings.source.id]
+
+                if settings.source.name != 'aggregate':
+                    laps: List[Lap] = [lap for lap in laps if lap.lap_source.id == settings.source.id]
+
+                if settings.freeze is not None:
+                    laps: List[Lap] = [lap for lap in laps if lap.timestamp <= settings.freeze]
 
                 counts: List[Dict] = [
                     Count(count=len([lap for lap in laps if lap.team == team]), team=team).dict() for team in
@@ -83,20 +101,19 @@ async def startup():
 @app.post('/api/use/{id}', dependencies=[Depends(admin)])
 async def api_post(id: int):
     try:
-        async with AsyncClient() as client:
-            lap_sources: Response = await client.get(f'{settings.telraam.base_url}/lap-source')
-            lap_sources_by_id: Dict[int, LapSource] = {
-                ls.id: ls for ls in [LapSource(**ls) for ls in lap_sources.json()]
-            }
-            await admin_publisher.publish('telraam-health', 'good')
-            if id in lap_sources_by_id:
-                lap_source: LapSource = lap_sources_by_id[id]
-                await admin_publisher.publish('active-source', lap_source.dict())
-                settings.source.id = lap_source.id
-                settings.source.name = lap_source.name
-                settings.persist()
-            else:
-                raise HTTPException(status_code=HTTP_409_CONFLICT, detail='Invalid LapSource Id')
+        lap_sources: list[Dict] = await get_lap_sources()
+        lap_sources_by_id: Dict[int, LapSource] = {
+            ls.id: ls for ls in [LapSource(**ls) for ls in lap_sources]
+        }
+        await admin_publisher.publish('telraam-health', 'good')
+        if id in lap_sources_by_id:
+            lap_source: LapSource = lap_sources_by_id[id]
+            await admin_publisher.publish('active-source', lap_source.dict())
+            settings.source.id = lap_source.id
+            settings.source.name = lap_source.name
+            settings.persist()
+        else:
+            raise HTTPException(status_code=HTTP_409_CONFLICT, detail='Invalid LapSource Id')
         return ['ok']
     except httpx.ConnectError:
         await admin_publisher.publish('telraam-health', 'bad')
@@ -108,6 +125,20 @@ async def post_message(message: Message):
     settings.message = message.message
     settings.persist()
     await feed_publisher.publish('message', message.message)
+
+
+@app.post("/api/freeze", status_code=HTTP_202_ACCEPTED, dependencies=[Depends(admin)])
+async def post_time(time: FreezeTime):
+    settings.freeze = time.time
+    settings.persist()
+    await admin_publisher.publish('freeze', time.time)
+
+
+@app.delete("/api/freeze", status_code=HTTP_202_ACCEPTED, dependencies=[Depends(admin)])
+async def delete_time():
+    settings.freeze = None
+    settings.persist()
+    await admin_publisher.publish('freeze', None)
 
 
 @app.get('/admin', response_class=HTMLResponse)

@@ -1,9 +1,10 @@
 admin:
   name: admin
   password: admin
-message: '******'
+freeze: null
+message: null
 source:
-  id: 1
-  name: simple-lapper
+  id: -1
+  name: aggregate
 telraam:
-  base_url: http://localhost:8080
+  base_url: http://172.12.50.21:8080

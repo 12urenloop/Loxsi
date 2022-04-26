@@ -8,7 +8,7 @@
   <script src="/static/admin.js"></script>
 </head>
 <body>
-<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%">
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%">
   <div class="row">
     <div class="col l6 m6 s6">
       <div class="tui-window" style="margin-bottom: 20px; width: 100%">
@@ -33,25 +33,61 @@
       </div>
     </div>
     <div class="col l12 m12 s12">
-      <div class="tui-window" style="margin-bottom: 20px; width: 100%">
-        <fieldset class="tui-fieldset">
-          <legend>Status Message</legend>
-          <label>
-            <textarea id="message-text" class="tui-input" style="width: 100%; height: 100px"></textarea>
-          </label>
-          <div class="row">
-            <div class="col l6 m12 s12" style="margin-top: 20px">
-              <button class="tui-button green-168 green-255-hover" style="width: 100%" onclick="sendMessage(document.getElementById('message-text').value)">
-                Send
-              </button>
-            </div>
-            <div class="col l6 m12 s12" style="margin-top: 20px">
-              <button class="tui-button red-168 red-255-hover" style="width: 100%" onclick="sendMessage(undefined)">
-                Remove
-              </button>
-            </div>
+      <div class="row">
+        <div class="col l6 m6 s6">
+          <div class="tui-window" style="width: 100%">
+            <fieldset class="tui-fieldset">
+              <legend>Status Message</legend>
+              <label>
+                <textarea id="message-text" class="tui-input" style="width: 100%; height: 100px"></textarea>
+              </label>
+              <div class="row">
+                <div class="col l6 m12 s12" style="margin-top: 20px">
+                  <button class="tui-button green-168 green-255-hover" style="width: 100%"
+                          onclick="sendMessage(document.getElementById('message-text').value)">
+                    Send
+                  </button>
+                </div>
+                <div class="col l6 m12 s12" style="margin-top: 20px">
+                  <button class="tui-button red-168 red-255-hover" style="width: 100%" onclick="sendMessage(undefined)">
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </fieldset>
           </div>
-        </fieldset>
+        </div>
+        <div class="col l6 m6 s6">
+          <div class="tui-window" style="width: 100%">
+            <fieldset class="tui-fieldset">
+              <legend class="center">Freeze: Time to pause the scoreboard at.</legend>
+              <div class="row">
+                <div class="col l12 m12 s12">
+                  <label>
+                    <input class="tui-input" type="datetime-local" id="freeze-time" style="width: 100%"/>
+                  </label>
+                </div>
+
+                <div class="col l12 m12 s12">
+                  <div class="row">
+                    <div class="col l6 m12 s12" style="margin-top: 20px">
+                      <button class="tui-button green-168 green-255-hover" style="width: 100%"
+                              onclick="sendTime(document.getElementById('freeze-time').value)">
+                        Set
+                      </button>
+                    </div>
+                    <div class="col l6 m12 s12" style="margin-top: 20px">
+                      <button class="tui-button red-168 red-255-hover" style="width: 100%"
+                              onclick="deleteTime(undefined)">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+        </div>
       </div>
     </div>
     <div class="col l12 m12 s12">

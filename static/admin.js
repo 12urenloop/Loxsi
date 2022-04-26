@@ -12,14 +12,12 @@ const COLORS = [
 let websocket = new WebSocket(`ws://${location.host}/feed`);
 
 websocket.onopen = (_event) => {
-    console.log('Hello');
     document.getElementById('chart-message').remove();
 };
 
 websocket.onmessage = (event) => {
     let data = JSON.parse(event.data)
     console.log(data)
-    console.log(data['topic']);
     if (data['topic'] === 'counts') {
         setData(data.data);
     } else if (data['topic'] === 'message') {
@@ -27,7 +25,8 @@ websocket.onmessage = (event) => {
     }
 };
 
-websocket.onclose = (_event) => {}
+websocket.onclose = (_event) => {
+}
 
 // region Admin feed
 let admin_feed = new WebSocket(`ws://${location.host}/admin/feed`);
@@ -64,7 +63,10 @@ let message_handlers = {
         }
     },
     'active-connections': data => {
-        document.getElementById('active-connections').innerText = `Count: ${data}`
+        document.getElementById('active-connections').innerText = `Count: ${data}`;
+    },
+    'freeze': data => {
+        document.getElementById('freeze-time').value = new Date(data + (2 * 60 * 60 * 1000)).toISOString().substring(0, 16);
     }
 }
 
@@ -91,16 +93,33 @@ function use(element) {
 }
 
 async function sendMessage(message) {
-    let res = await fetch('/api/message', {
+    await fetch('/api/message', {
         method: "POST",
         body: JSON.stringify({
             message: message
         }),
         headers: {
-		'Content-type': 'application/json; charset=UTF-8'
-	    }
+            'Content-type': 'application/json; charset=UTF-8'
+        }
     })
-    console.log(res);
+}
+
+async function sendTime(message) {
+    await fetch('/api/freeze', {
+        method: "POST",
+        body: JSON.stringify({
+            time: new Date(message).getTime()
+        }),
+        headers: {
+            'Content-type': 'application/json; charset=UTF-8'
+        }
+    })
+}
+
+async function deleteTime() {
+    await fetch('/api/freeze', {
+        method: "DELETE"
+    })
 }
 
 function setData(res) {

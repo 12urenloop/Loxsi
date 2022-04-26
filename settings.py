@@ -24,6 +24,7 @@ class Settings(BaseModel):
     source_file: str
     telraam: Telraam
     message: str | None
+    freeze: int | None
 
     def persist(self) -> None:
         with open(self.source_file, 'w') as file:
