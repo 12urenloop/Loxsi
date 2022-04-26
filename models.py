@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -25,7 +27,7 @@ class Count(BaseModel):
 
 
 class Message(BaseModel):
-    message: str | None
+    message: Optional[str]
 
 
 class FreezeTime(BaseModel):
