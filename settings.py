@@ -23,8 +23,8 @@ class Settings(BaseModel):
     source: Source = Source()
     source_file: str
     telraam: Telraam
-    message: str | None
-    freeze: int | None
+    message: Optional[str]
+    freeze: Optional[int]
 
     def persist(self) -> None:
         with open(self.source_file, 'w') as file:
