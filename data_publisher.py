@@ -9,6 +9,7 @@ class DataPublisher(QueueManager):
     An extension on QueueManagers that only publishes data when it is different from last publish.
     Also provides a way to publish data to topics. This way one queue can easily be used for multiple data updates.
     """
+
     def __init__(self):
         super().__init__()
         self.cache: Dict[str, Any] = {}

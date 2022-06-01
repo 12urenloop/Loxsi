@@ -27,13 +27,15 @@ class Settings(BaseModel):
     freeze: Optional[int]
 
     def persist(self) -> None:
-        with open(self.source_file, 'w') as file:
-            file.write(yaml.dump(self.dict(exclude={'source_file'}), default_flow_style=False))
+        with open(self.source_file, "w") as file:
+            file.write(
+                yaml.dump(self.dict(exclude={"source_file"}), default_flow_style=False)
+            )
 
 
 def get_config(source_file: str) -> Settings:
-    with open(source_file, 'r') as file:
+    with open(source_file, "r") as file:
         return Settings(source_file=source_file, **yaml.load(file, Loader=yaml.Loader))
 
 
-settings: Settings = get_config('config.yml')
+settings: Settings = get_config("config.yml")
