@@ -130,7 +130,11 @@ function setData(res) {
     const chartElem = document.getElementById('chart');
     const chartLegendElem = document.getElementById('chart-legend');
     let highestCount = 0;
-    highestCount = res.find(t => t.count > highestCount)?.count ?? 0
+    for (let t of res) {
+      if (t.count > highestCount) {
+        highestCount = t.count;
+      }
+    };
     let colorIdx = 0;
     res.sort((a, b) => a.team.id - b.team.id).forEach(t => {
         // Search existing elem
