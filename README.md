@@ -2,10 +2,12 @@
 
 # Setup
 
+[Download Poetry](https://python-poetry.org/docs/)
+
 ```bash
 python3 -m venv venv
 . venv/bin/activate
-pip3 install -r requirements.txt
+poetry install
 ```
 
 ## Configure
@@ -31,7 +33,7 @@ When this is changed on the admin panel the config will change accordingly.
 ```yaml
 source:
   id: <telraam lapsource id>
-  name: <lapsource name> # Optional 
+  name: <lapsource name> # Optional
 ```
 
 # Running
