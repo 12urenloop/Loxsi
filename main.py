@@ -177,11 +177,9 @@ async def feed(websocket: WebSocket):
         while True:
             try:
                 topic, data = await asyncio.wait_for(_feed(), timeout=3)
+                await websocket.send_json({'topic': topic, 'data': data})
             except asyncio.exceptions.TimeoutError:
                 await websocket.send_json({'topic': "ping", 'data': "ping"})
-                continue
-
-            await websocket.send_json({'topic': topic, 'data': data})
 
     except websockets.exceptions.ConnectionClosedOK:
         pass
