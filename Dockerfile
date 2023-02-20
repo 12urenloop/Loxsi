@@ -10,4 +10,4 @@ RUN poetry install --only main
 
 COPY . .
 
-CMD [ "pypy3", "-m", "uvicorn", "--host", "0.0.0.0", "main:app" ]
+CMD [ "pypy3", "-m", "uvicorn", "--host", "0.0.0.0", "--port", "80", "main:app" ]
