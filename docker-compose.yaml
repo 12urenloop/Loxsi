@@ -6,7 +6,7 @@ services:
             context: .
         container_name: loxsi
         ports:
-          - "8080:80"
+          - "8000:80"
         volumes:
           - type: bind
             source: ./config.yml
