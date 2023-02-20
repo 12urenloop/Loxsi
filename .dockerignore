@@ -1,0 +1,8 @@
+.git/
+venv/
+.dockerignore
+.tool-versions
+config.yml
+LICENSE
+README.md
+**/*.pyc
