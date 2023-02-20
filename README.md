@@ -2,13 +2,7 @@
 
 # Setup
 
-[Download Poetry](https://python-poetry.org/docs/)
-
-```bash
-python3 -m venv venv
-. venv/bin/activate
-poetry install
-```
+Make sure you have docker and docker compose
 
 ## Configure
 
@@ -39,5 +33,11 @@ source:
 # Running
 
 ```bash
-uvicorn main:app --host 0.0.0.0
+docker compose up --build -d
+```
+
+Or, if you are lazy
+
+```bash
+make
 ```
