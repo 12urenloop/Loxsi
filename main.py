@@ -168,10 +168,19 @@ async def feed(websocket: WebSocket):
     await websocket.accept()
     queue = await feed_publisher.add()
     await admin_publisher.publish('active-connections', await admin_publisher.count() + await feed_publisher.count())
+
+    async def _feed():
+        topic, data = await queue.get()
+        return (topic, data)
+
     try:
         while True:
-            topic, data = await queue.get()
-            await websocket.send_json({'topic': topic, 'data': data})
+            try:
+                topic, data = await asyncio.wait_for(_feed(), timeout=3)
+                await websocket.send_json({'topic': topic, 'data': data})
+            except asyncio.exceptions.TimeoutError:
+                await websocket.send_json({'topic': "ping", 'data': "ping"})
+
     except websockets.exceptions.ConnectionClosedOK:
         pass
     finally:
