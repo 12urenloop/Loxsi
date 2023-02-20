@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+    loxsi:
+        build:
+            context: .
+        container_name: loxsi
+        ports:
+          - "8000:80"
+        volumes:
+          - type: bind
+            source: ./config.yml
+            target: /loxsi/config.yml
