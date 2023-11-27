@@ -11,7 +11,7 @@ class AdminUser(BaseModel):
 
 class Source(BaseModel):
     id: int = 0
-    name: Optional[str]
+    name: Optional[str] = None
 
 
 class Telraam(BaseModel):
