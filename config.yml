@@ -1,10 +1,4 @@
-admin:
-  name: admin
-  password: admin
-freeze: null
-message: null
-source:
-  id: -1
-  name: accepted-laps
 telraam:
-  base_url: http://172.12.50.21:8080
+  host: ""
+  port: 0
+show_live: True

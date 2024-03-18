@@ -1,0 +1,5 @@
+fastapi==0.110.0
+pydantic==2.6.4
+PyYAML==6.0.1
+uvicorn==0.28.0
+websockets==12.0

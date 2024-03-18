@@ -1,14 +1,32 @@
-from typing import Dict, Any
 from asyncio import Lock, Queue
+from typing import Any, Container, Dict, List
 
-from queue_manager import QueueManager
+
+class QueueManager:
+
+    def __init__(self):
+        self.queues: List[Queue] = []
+        self._broadcast_lock: Lock = Lock()
+
+    async def add(self) -> Queue:
+        queue: Queue = Queue()
+        self.queues.append(queue)
+        return queue
+
+    async def remove(self, queue: Queue) -> None:
+        self.queues.remove(queue)
+
+    async def broadcast(self, data: Container) -> None:
+        async with self._broadcast_lock:
+            for queue in self.queues:
+                await queue.put(data)
+
+    async def count(self) -> int:
+        return len(self.queues)
 
 
 class DataPublisher(QueueManager):
-    """
-    An extension on QueueManagers that only publishes data when it is different from last publish.
-    Also provides a way to publish data to topics. This way one queue can easily be used for multiple data updates.
-    """
+
     def __init__(self):
         super().__init__()
         self.cache: Dict[str, Any] = {}

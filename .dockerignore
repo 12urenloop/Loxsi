@@ -1,8 +1,8 @@
 .git/
-venv/
+*venv/
 .dockerignore
+.gitignore
 .tool-versions
-config.yml
 LICENSE
 README.md
 **/*.pyc

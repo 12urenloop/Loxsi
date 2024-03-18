@@ -1,39 +1,18 @@
-from pydantic import BaseModel
-from typing import Optional
-
 import yaml
-
-
-class AdminUser(BaseModel):
-    name: str
-    password: str
-
-
-class Source(BaseModel):
-    id: int = 0
-    name: Optional[str] = None
+from pydantic import BaseModel
 
 
 class Telraam(BaseModel):
-    base_url: str
+    host: str
+    port: int
 
 
 class Settings(BaseModel):
-    admin: AdminUser
-    source: Source = Source()
-    source_file: str
     telraam: Telraam
-    message: Optional[str]
-    freeze: Optional[int]
+    show_live: bool
 
-    def persist(self) -> None:
-        with open(self.source_file, 'w') as file:
-            file.write(yaml.dump(self.dict(exclude={'source_file'}), default_flow_style=False))
-
-
-def get_config(source_file: str) -> Settings:
-    with open(source_file, 'r') as file:
-        return Settings(source_file=source_file, **yaml.load(file, Loader=yaml.Loader))
-
-
-settings: Settings = get_config('config.yml')
+    @classmethod
+    def load_from_yaml(cls, file_path: str):
+        with open(file_path, "r") as f:
+            settings_data = yaml.safe_load(f)
+        return cls(**settings_data)
