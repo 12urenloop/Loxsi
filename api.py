@@ -1,19 +1,19 @@
 from fastapi import APIRouter, Request, WebSocket
 
 from settings import Settings
-from websocket import WebSocketHandler, WebSocketHandlerAdmin
+from websocket import WebSocketHandler
 
 
 class ApiRouter(APIRouter):
     _settings: Settings
     _feed_handler: WebSocketHandler
-    _admin_feed_handler: WebSocketHandlerAdmin
+    _admin_feed_handler: WebSocketHandler
 
     def __init__(
         self,
         settings: Settings,
         feed_handler: WebSocketHandler,
-        admin_feed_handler: WebSocketHandlerAdmin,
+        admin_feed_handler: WebSocketHandler,
     ):
         super().__init__()
 

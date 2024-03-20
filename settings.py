@@ -10,6 +10,8 @@ class Telraam(BaseModel):
 class Settings(BaseModel):
     telraam: Telraam
     show_live: bool
+    telraam_uri: str
+    debug: bool
 
     @classmethod
     def load_from_yaml(cls, file_path: str):

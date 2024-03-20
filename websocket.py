@@ -9,20 +9,20 @@ from data_publisher import DataPublisher
 
 
 class WebSocketHandler:
-    publisher: DataPublisher
+    _publisher: DataPublisher
 
-    def __init__(self) -> None:
-        self.publisher = DataPublisher()
+    def __init__(self, publisher: DataPublisher) -> None:
+        self._publisher = publisher
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
 
-        queue = await self.publisher.add()
+        queue = await self._publisher.add()
 
         try:
             await self._handle_connect(queue)
         finally:
-            await self.publisher.remove_client(websocket)
+            await self._publisher.remove_client(websocket)
 
     async def _send(websocket: WebSocket, queue: asyncio.Queue):
         async def _feed():
@@ -64,3 +64,44 @@ class WebSocketHandlerAdmin(WebSocketHandler):
 
     async def _handle_receive(self, message: str):
         print(message)
+
+
+class WebSocketListener:
+    _uri: str
+    _feed_publisher: DataPublisher
+    _admin_publisher: DataPublisher
+
+    _connection_error: int = 0
+
+    def __init__(
+        self, uri: str, _feed_publisher: DataPublisher, _admin_publisher: DataPublisher
+    ) -> None:
+        self._uri = uri
+        self._feed_publisher = _feed_publisher
+        self._admin_publisher = _admin_publisher
+
+    async def start(self):
+        print("HiHi", flush=True)
+        print(self._uri, flush=True)
+        async with websockets.connect(self._uri) as ws:
+            print("Next", flush=True)
+            while True:
+                try:
+                    await ws.send(str(self._connection_error))
+                    message = await ws.recv()
+                    await self._receive(message)
+                except websockets.exceptions.ConnectionClosed:
+                    self._connection_error += 1
+                    await asyncio.sleep(self._connection_error * 5)
+                    try:
+                        print("Trying", flush=True)
+                        message = await ws.recv()
+                        await self._receive(message)
+                        self._connection_error = 0
+                    except websockets.exceptions.ConnectionClosed:
+                        if self._connection_error > 1:
+                            print("Lost connection with telraam", flush=True)
+                            return
+
+    async def _receive(self, message: str):
+        print(message, flush=True)

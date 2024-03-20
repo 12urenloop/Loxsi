@@ -10,3 +10,6 @@ services:
       - "8080:80"
     volumes:
       - "./:/loxsi/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # command: "uvicorn --host 0.0.0.0 --port 80 main:app --reload"

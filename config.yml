@@ -2,3 +2,5 @@ telraam:
   host: ""
   port: 0
 show_live: True
+telraam_uri: "ws://host.docker.internal:8765"
+debug: True
