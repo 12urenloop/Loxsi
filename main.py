@@ -8,26 +8,31 @@ from api import ApiRouter
 from data_publisher import DataPublisher
 from fetcher import Fetcher
 from settings import Settings
-from websocket import WebSocketHandler, WebSocketHandlerAdmin, WebSocketListener
+from websocket import WebSocketHandler, WebSocketListener
 
 settings = Settings.load_from_yaml("config.yml")
 
+# Classes to hold all messages to send to the websockets
 feed_publisher = DataPublisher()
 admin_publisher = DataPublisher()
 
+# Websockets between Loxsi and the frontend
 feed_handler = WebSocketHandler(settings, feed_publisher)
-admin_feed_handler = WebSocketHandlerAdmin(settings, admin_publisher)
+admin_feed_handler = WebSocketHandler(settings, admin_publisher)
+# Websocket between Loxsi and Telraam
 telraam = WebSocketListener(settings, feed_publisher, admin_publisher)
 
+# Fetcher to periodically get data from the Telraam API
 fetcher = Fetcher(settings, feed_publisher, admin_publisher)
 
 
+# Start background tasks when the app starts
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     asyncio.create_task(telraam.start())
     asyncio.create_task(fetcher.fetch())
     await admin_publisher.publish("active-source", settings.source.model_dump())
-    yield
+    yield  # Signal that the startup can go ahead
 
 
 app = FastAPI(

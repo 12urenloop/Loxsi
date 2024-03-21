@@ -1,7 +1,6 @@
 admin:
   name: admin
   password: admin
-debug: True
 interval:
   feed: 3
   fetch: 2

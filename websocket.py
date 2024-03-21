@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import Dict, override
+from typing import Dict
 
 from websockets import InvalidHandshake
 import websockets.exceptions
@@ -12,24 +12,72 @@ from settings import Settings
 
 
 class WebSocketHandler:
+    """
+    Handles WebSocket connections and message handling.
+    """
+
     _settings: Settings
     _publisher: DataPublisher
 
     def __init__(self, settings: Settings, publisher: DataPublisher):
+        """
+        Initializes a new instance of the WebSocket class.
+
+        Args:
+            settings (Settings): The settings object containing configuration options.
+            publisher (DataPublisher): The data publisher object used for publishing data.
+
+        """
         self._settings = settings
         self._publisher = publisher
 
     async def connect(self, websocket: WebSocket):
+        """
+        Connects a WebSocket client and starts handling messages.
+
+        Args:
+            websocket (WebSocket): The WebSocket connection object.
+
+        Notes:
+            This method accepts the WebSocket connection, adds the client to the data publisher,
+            and starts handling messages by calling the `_handle_connect` method.
+        """
         await websocket.accept()
 
         queue = await self._publisher.add()
 
         try:
-            await self._handle_connect(queue)
+            await self._handle_connect(websocket, queue)
         finally:
             await self._publisher.remove_client(websocket)
 
+    async def _handle_connect(self, websocket: WebSocket, queue: asyncio.Queue):
+        """
+        Handles the WebSocket connection and message handling.
+
+        Args:
+            websocket (WebSocket): The WebSocket connection object.
+            queue (asyncio.Queue): The queue for receiving messages from the data publisher.
+
+        Notes:
+            This method calls the `_send` method to start sending messages to the WebSocket client.
+        """
+        await self._send(websocket, queue)
+
     async def _send(self, websocket: WebSocket, queue: asyncio.Queue):
+        """
+        Sends messages to the WebSocket client.
+
+        Args:
+            websocket (WebSocket): The WebSocket connection object.
+            queue (asyncio.Queue): The queue for receiving messages from the data publisher.
+
+        Notes:
+            This method continuously waits for messages from the queue and sends them to the
+            WebSocket client. If the feed timeout is reached, it sends a ping message to keep
+            the connection alive.
+        """
+
         async def _feed():
             topic, data = await queue.get()
             return (topic, data)
@@ -43,35 +91,12 @@ class WebSocketHandler:
             except asyncio.exceptions.TimeoutError:
                 await websocket.send_json({"ping": "pong"})
 
-    async def _handle_connect(self, websocket: WebSocket, queue: asyncio.Queue):
-        await self._send(websocket, queue)
-
-
-class WebSocketHandlerAdmin(WebSocketHandler):
-
-    @override
-    async def _handle_connect(self, websocket: WebSocket, queue: asyncio.Queue):
-        async def _receive():
-            while True:
-                message = await websocket.receive_text()
-                await self.handle_receive(message)
-
-        receive_task = asyncio.create_task(_receive())
-        send_task = asyncio.create_task(self._send(websocket, queue))
-
-        try:
-            await asyncio.gather(receive_task, send_task, return_exceptions=True)
-        except websockets.exceptions.ConnectionClosedOK as e:
-            raise e
-        finally:
-            receive_task.cancel()
-            send_task.cancel()
-
-    async def _handle_receive(self, message: str):
-        print(message)
-
 
 class WebSocketListener:
+    """
+    Represents a WebSocket listener that connects to an existing WebSocket server and handles incoming messages.
+    """
+
     _settings: Settings
     _feed_publisher: DataPublisher
     _admin_publisher: DataPublisher
@@ -87,6 +112,11 @@ class WebSocketListener:
         self._admin_publisher = _admin_publisher
 
     async def start(self):
+        """
+        Starts the WebSocket connection and continuously receives messages.
+
+        If the connection is closed, it will attempt to reconnect.
+        """
         try:
             async with websockets.connect(self._settings.telraam.ws) as ws:
                 await self._admin_publisher.publish("telraam-health", "good")
@@ -102,9 +132,12 @@ class WebSocketListener:
             await self.start()
 
     async def _receive(self, message: str):
+        """
+        Handles the received message by parsing and publishing the data.
+
+        Args:
+            message (str): The received message as a string.
+        """
         data: Dict[str, str] = json.loads(message)
         key, value = list(data.items())[0]
         await self._feed_publisher.publish(key, value)
-
-
-# TODO: Intervals

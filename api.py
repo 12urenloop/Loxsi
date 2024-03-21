@@ -18,6 +18,10 @@ from starlette.status import (
 
 
 class ApiRouter(APIRouter):
+    """_summary_
+    Class responsible for defining the API routes and handling incoming requests.
+    """
+
     _settings: Settings
     _feed_handler: WebSocketHandler
     _admin_feed_handler: WebSocketHandler
@@ -31,6 +35,15 @@ class ApiRouter(APIRouter):
         admin_feed_handler: WebSocketHandler,
         fetcher: Fetcher,
     ):
+        """
+        Initializes a new instance of the ApiRouter class.
+
+        Args:
+            settings (Settings): The settings object containing configuration options.
+            feed_handler (WebSocketHandler): Websocket handler for the feed.
+            admin_feed_handler (WebSocketHandler): Websocket handler for the admin feed.
+            fetcher (Fetcher): Class responsible for fetching data from the Telraam API.
+        """
         super().__init__()
 
         self.settings = settings
@@ -40,6 +53,12 @@ class ApiRouter(APIRouter):
         self._templates = Jinja2Templates(directory="templates")
 
     def add_routes(self):
+        """
+        Adds the API routes to the FastAPI application.
+
+        Returns:
+            ApiRouter: The instance of the ApiRouter class with the added routes.
+        """
 
         @self.get("/ping")
         async def _ping(request: Request):
@@ -120,6 +139,18 @@ class ApiRouter(APIRouter):
         return self
 
     async def _admin_auth(self, credentials: HTTPBasicCredentials):
+        """
+        Authenticate the admin user using HTTP basic authentication.
+
+        Args:
+            credentials (HTTPBasicCredentials): The credentials provided by the client.
+
+        Raises:
+            HTTPException: If the credentials are invalid.
+
+        Returns:
+            None: If the credentials are valid.
+        """
         invalid_credentials = HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Invalid Credentials",
