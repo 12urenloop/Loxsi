@@ -3,45 +3,40 @@ from typing import Any, Container, Dict, List
 
 
 class QueueManager:
-
-    def __init__(self):
-        self.queues: List[Queue] = []
-        self._broadcast_lock: Lock = Lock()
+    _queues: List[Queue] = []
+    _broadcast_lock: Lock = Lock()
 
     async def add(self) -> Queue:
         queue: Queue = Queue()
-        self.queues.append(queue)
+        self._queues.append(queue)
         return queue
 
-    async def remove(self, queue: Queue) -> None:
-        self.queues.remove(queue)
+    async def remove(self, queue: Queue):
+        self._queues.remove(queue)
 
-    async def broadcast(self, data: Container) -> None:
+    async def _broadcast(self, data: Container):
         async with self._broadcast_lock:
-            for queue in self.queues:
+            for queue in self._queues:
                 await queue.put(data)
 
     async def count(self) -> int:
-        return len(self.queues)
+        return len(self._queues)
 
 
 class DataPublisher(QueueManager):
-
-    def __init__(self):
-        super().__init__()
-        self.cache: Dict[str, Any] = {}
-        self.publish_lock: Lock = Lock()
+    _cache: Dict[str, Any] = {}
+    _publish_lock: Lock = Lock()
 
     async def add(self) -> Queue:
         queue: Queue = await super().add()
-        async with self.publish_lock:
-            for topic in self.cache:
-                await queue.put((topic, self.cache[topic]))
+        async with self._publish_lock:
+            for topic in self._cache:
+                await queue.put((topic, self._cache[topic]))
         return queue
 
     async def publish(self, topic, data) -> None:
-        async with self.publish_lock:
-            if topic in self.cache and self.cache[topic] == data:
+        async with self._publish_lock:
+            if topic in self._cache and self._cache[topic] == data:
                 return
-            self.cache[topic] = data
-            await self.broadcast((topic, data))
+            self._cache[topic] = data
+            await self._broadcast((topic, data))

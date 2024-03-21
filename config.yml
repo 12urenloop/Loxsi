@@ -1,6 +1,19 @@
-telraam:
-  host: ""
-  port: 0
-show_live: True
-telraam_uri: "ws://host.docker.internal:8765"
+admin:
+  name: admin
+  password: admin
 debug: True
+interval:
+  feed: 3
+  fetch: 2
+  websocket: 5
+fetch_interval: 2
+message: null
+source:
+  id: -1
+  name: accepted-laps
+site:
+  show_live: True
+  freeze: null
+telraam:
+  api: http://host.docker.internal:8080
+  ws: ws://host.docker.internal:8765
