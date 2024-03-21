@@ -4,7 +4,7 @@ services:
   loxsi:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     container_name: loxsi
     ports:
       - "8080:80"
@@ -12,4 +12,4 @@ services:
       - "./:/loxsi/"
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    # command: "uvicorn --host 0.0.0.0 --port 80 main:app --reload"
+    command: "uvicorn --host 0.0.0.0 --port 80 main:app --reload"

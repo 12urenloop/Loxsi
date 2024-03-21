@@ -1,6 +1,7 @@
 import asyncio
 from typing import override
 
+from websockets import InvalidHandshake
 import websockets.exceptions
 from fastapi import WebSocket
 from fastapi.encoders import jsonable_encoder
@@ -71,8 +72,6 @@ class WebSocketListener:
     _feed_publisher: DataPublisher
     _admin_publisher: DataPublisher
 
-    _connection_error: int = 0
-
     def __init__(
         self, uri: str, _feed_publisher: DataPublisher, _admin_publisher: DataPublisher
     ) -> None:
@@ -81,27 +80,19 @@ class WebSocketListener:
         self._admin_publisher = _admin_publisher
 
     async def start(self):
-        print("HiHi", flush=True)
-        print(self._uri, flush=True)
-        async with websockets.connect(self._uri) as ws:
-            print("Next", flush=True)
-            while True:
-                try:
-                    await ws.send(str(self._connection_error))
-                    message = await ws.recv()
-                    await self._receive(message)
-                except websockets.exceptions.ConnectionClosed:
-                    self._connection_error += 1
-                    await asyncio.sleep(self._connection_error * 5)
+        try:
+            async with websockets.connect(self._uri) as ws:
+                while True:
                     try:
-                        print("Trying", flush=True)
                         message = await ws.recv()
                         await self._receive(message)
-                        self._connection_error = 0
                     except websockets.exceptions.ConnectionClosed:
-                        if self._connection_error > 1:
-                            print("Lost connection with telraam", flush=True)
-                            return
+                        print("Connection lost, reconnecting...", flush=True)
+                        await self.start()
+        except (OSError, InvalidHandshake):
+            print("Connection error, retrying ...", flush=True)
+            await asyncio.sleep(5)
+            await self.start()
 
     async def _receive(self, message: str):
         print(message, flush=True)

@@ -1,7 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
 
-import websockets
 from fastapi import FastAPI
 
 from api import ApiRouter
@@ -19,16 +18,9 @@ admin_feed_handler = WebSocketHandlerAdmin(admin_publisher)
 telraam = WebSocketListener(settings.telraam_uri, feed_publisher, admin_publisher)
 
 
-async def start_telraam():
-    print("Starting", flush=True)
-    await telraam.start()
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    task = await asyncio.create_task(telraam.start())
-    print(task.print_stack(), flush=True)
-    # await telraam.start()
+    asyncio.create_task(telraam.start())
     yield
 
 
@@ -38,5 +30,6 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
 api_router = ApiRouter(settings, feed_handler, admin_feed_handler).add_routes()
 app.include_router(api_router)
