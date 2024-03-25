@@ -128,7 +128,7 @@ class WebSocketListener:
                         await self.start()
         except (OSError, InvalidHandshake):
             await self._admin_publisher.publish("telraam-health", "bad")
-            await asyncio.sleep(self._settings.interval.ws)
+            await asyncio.sleep(self._settings.interval.websocket)
             await self.start()
 
     async def _receive(self, message: str):
