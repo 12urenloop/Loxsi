@@ -1,18 +1,17 @@
 admin:
-  name: admin
-  password: admin
+    name: admin
+    password: admin
 interval:
-  feed: 3
-  fetch: 2
-  websocket: 5
-fetch_interval: 2
+    feed: 3
+    fetch: 2
+    websocket: 5
 message: null
 source:
-  id: -1
-  name: accepted-laps
+    id: -1
+    name: accepted-laps
 site:
-  show_live: True
-  freeze: null
+    show_live: True
+    freeze: null
 telraam:
-  api: http://host.docker.internal:8080
-  ws: ws://host.docker.internal:8765
+    api: http://host.docker.internal:8080
+    ws: ws://host.docker.internal:8765

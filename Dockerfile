@@ -1,9 +1,12 @@
 FROM python:3.12
 
+RUN pip install -U poetry
+RUN poetry config virtualenvs.create false
+
 WORKDIR /loxsi
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml poetry.lock ./
+RUN poetry install --only main
 
 COPY . .
 
