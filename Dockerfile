@@ -1,4 +1,4 @@
-FROM pypy:slim-bullseye
+FROM python:3.12
 
 RUN pip install -U poetry
 RUN poetry config virtualenvs.create false
@@ -10,4 +10,4 @@ RUN poetry install --only main
 
 COPY . .
 
-CMD [ "pypy3", "-m", "uvicorn", "--host", "0.0.0.0", "--port", "80", "main:app" ]
+# CMD ["uvicorn", "--host", "0.0.0.0", "--port", "80", "main:app"]

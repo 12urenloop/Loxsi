@@ -3,6 +3,9 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+# Define the models for the received from Telraam
+
+
 class LapSource(BaseModel):
     id: int
     name: str
@@ -11,7 +14,6 @@ class LapSource(BaseModel):
 class Team(BaseModel):
     id: int
     name: str
-    # batonId: int
 
 
 class Lap(BaseModel):
