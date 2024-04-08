@@ -32,12 +32,18 @@ source:
 
 # Running
 
+Access at `http://localhost:8080`
+
+## Development
+
+The development container supports hot reloading.
+
 ```bash
-docker compose up --build -d
+docker-compose -f docker-compose.dev.yml up
 ```
 
-Or, if you are lazy
+## Production
 
 ```bash
-make
+docker-compose -f docker-compose.yml up --build -d
 ```
