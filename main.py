@@ -4,11 +4,20 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from api import ApiRouter
+from api import router, apiRouter
 from data_publisher import DataPublisher
 from fetcher import Fetcher
 from settings import Settings
 from websocket import WebSocketHandler, WebSocketListener
+
+from models import FreezeTime, LapSource, Message
+
+from starlette.status import (
+    HTTP_202_ACCEPTED,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_409_CONFLICT,
+    HTTP_502_BAD_GATEWAY,
+)
 
 settings = Settings.load_from_yaml("config.yml")
 
@@ -43,5 +52,5 @@ app = FastAPI(
 )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-api_router = ApiRouter(settings, feed_handler, admin_feed_handler, fetcher).add_routes()
-app.include_router(api_router)
+api_router = apiRouter.setup(settings, feed_handler, admin_feed_handler, fetcher)
+app.include_router(router)

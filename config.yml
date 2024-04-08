@@ -13,5 +13,5 @@ site:
     show_live: True
     freeze: null
 telraam:
-    api: http://host.docker.internal:8080
+    api: https://telraam.velteq.com # http://host.docker.internal:8080
     ws: ws://host.docker.internal:8765

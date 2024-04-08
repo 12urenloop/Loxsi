@@ -49,7 +49,7 @@ class WebSocketHandler:
         try:
             await self._handle_connect(websocket, queue)
         finally:
-            await self._publisher.remove_client(websocket)
+            await self._publisher.remove(queue)
 
     async def _handle_connect(self, websocket: WebSocket, queue: asyncio.Queue):
         """
@@ -90,6 +90,9 @@ class WebSocketHandler:
                 await websocket.send_json({topic: jsonable_encoder(data)})
             except asyncio.exceptions.TimeoutError:
                 await websocket.send_json({"ping": "pong"})
+            except websockets.exceptions.ConnectionClosed:
+                # Handle unexpected connection closure by reconnecting
+                await self.connect(websocket)
 
 
 class WebSocketListener:
