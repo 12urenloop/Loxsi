@@ -1,4 +1,4 @@
-FROM python:3.12
+FROM python:3.12-alpine3.19
 
 RUN pip install -U poetry
 RUN poetry config virtualenvs.create false

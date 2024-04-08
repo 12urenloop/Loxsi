@@ -6,3 +6,8 @@
 LICENSE
 README.md
 **/*.pyc
+
+__pycache__
+Dockerfile
+docker-compose.dev.yml
+docker-compose.yaml
