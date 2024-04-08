@@ -30,7 +30,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(
     title="Loxsi",
     description="Data proxy for the Telraam application",
-    version="1.0.0",
+    version="0.6.9",
     lifespan=lifespan,
 )
 
