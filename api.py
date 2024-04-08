@@ -1,20 +1,20 @@
-from typing import Dict
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket
 from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
-import httpx
-
-from fetcher import Fetcher
-from models import FreezeTime, LapSource, Message
-from settings import Settings
-from websocket import WebSocketHandler
 from starlette.status import (
     HTTP_202_ACCEPTED,
     HTTP_401_UNAUTHORIZED,
     HTTP_409_CONFLICT,
     HTTP_502_BAD_GATEWAY,
 )
+
+from fetcher import Fetcher
+from models import FreezeTime, LapSource, Message
+from settings import Settings
+from websocket import WebSocketHandler
+
 
 class ApiRouter(APIRouter):
     """_summary_
@@ -28,11 +28,11 @@ class ApiRouter(APIRouter):
     _templates: Jinja2Templates
 
     def setup(
-        self,
-        settings: Settings,
-        feed_handler: WebSocketHandler,
-        admin_feed_handler: WebSocketHandler,
-        fetcher: Fetcher,
+            self,
+            settings: Settings,
+            feed_handler: WebSocketHandler,
+            admin_feed_handler: WebSocketHandler,
+            fetcher: Fetcher,
     ):
         """
         Initializes a new instance of the ApiRouter class.
@@ -74,8 +74,8 @@ class ApiRouter(APIRouter):
             raise invalid_credentials
 
         if (
-            credentials.password == self._settings.admin.password
-            and credentials.username == self._settings.admin.name
+                credentials.password == self._settings.admin.password
+                and credentials.username == self._settings.admin.name
         ):
             return
 
@@ -85,9 +85,11 @@ class ApiRouter(APIRouter):
 router = APIRouter()
 apiRouter = ApiRouter()
 
+
 @router.get("/ping")
 async def _ping(request: Request):
     return {"message": "Pong!"}
+
 
 @router.post(
     "/api/use/{id}",
@@ -95,8 +97,8 @@ async def _ping(request: Request):
 )
 async def _post_lap_source(id: int):
     try:
-        lap_sources: list[Dict] = await apiRouter._fetcher.get_lap_sources()
-        lap_sources_by_id: Dict[int, LapSource] = {
+        lap_sources: list[dict] = await apiRouter._fetcher.get_lap_sources()
+        lap_sources_by_id: dict[int, LapSource] = {
             ls.id: ls for ls in [LapSource(**ls) for ls in lap_sources]
         }
         await apiRouter._admin_publisher.publish("telraam-health", "good")
@@ -119,6 +121,7 @@ async def _post_lap_source(id: int):
             status_code=HTTP_502_BAD_GATEWAY, detail="Can't reach data server"
         )
 
+
 @router.post(
     "/api/message",
     status_code=HTTP_202_ACCEPTED,
@@ -130,6 +133,7 @@ async def _post_message(message: Message):
     apiRouter._settings.persist()
     await apiRouter._feed_publisher.publish("message", message.message)
 
+
 @router.post(
     "/api/freeze",
     status_code=HTTP_202_ACCEPTED,
@@ -139,6 +143,7 @@ async def _post_freeze(time: FreezeTime):
     apiRouter._settings.freeze = time.time
     apiRouter._settings.persist()
     await apiRouter._admin_publisher.publish("freeze", time.time)
+
 
 @router.delete(
     "/api/freeze",
@@ -150,13 +155,16 @@ async def _delete_freeze():
     apiRouter._settings.persist()
     await apiRouter._admin_publisher.publish("freeze", None)
 
+
 @router.get("/admin", response_class=HTMLResponse)
 async def _admin(request: Request, _=apiRouter._admin_auth):
     return apiRouter._templates.TemplateResponse("admin.html", {"request": request})
 
+
 @router.websocket("/feed")
 async def _feed(websocket: WebSocket):
     await apiRouter._feed_handler.connect(websocket)
+
 
 @router.websocket("/admin/feed")
 async def _feed_admin(websocket: WebSocket):

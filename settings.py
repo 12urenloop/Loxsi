@@ -1,5 +1,5 @@
-from __future__ import annotations
 from typing import Optional
+
 import yaml
 from pydantic import BaseModel
 
@@ -29,7 +29,7 @@ class Site(BaseModel):
     """
 
     show_live: bool  # Show the live visual
-    freeze: Optional[int]  # Freeze the site
+    freeze: int | None  # Freeze the site
 
 
 class Source(BaseModel):
@@ -38,7 +38,7 @@ class Source(BaseModel):
     """
 
     id: int
-    name: Optional[str]
+    name: str | None
 
 
 class Telraam(BaseModel):
@@ -57,7 +57,7 @@ class Settings(BaseModel):
 
     admin: Admin
     interval: Interval
-    message: Optional[str]
+    message: str | None
     site: Site
     source: Source
     source_file: str
@@ -75,7 +75,7 @@ class Settings(BaseModel):
             )
 
     @classmethod
-    def load_from_yaml(cls, file_path: str) -> Settings:
+    def load_from_yaml(cls, file_path: str) -> 'Settings':
         """
         Load settings from a YAML file.
 

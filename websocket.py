@@ -1,6 +1,5 @@
 import asyncio
 import json
-from typing import Dict
 
 from websockets import InvalidHandshake
 import websockets.exceptions
@@ -105,10 +104,10 @@ class WebSocketListener:
     _admin_publisher: DataPublisher
 
     def __init__(
-        self,
-        settings: Settings,
-        _feed_publisher: DataPublisher,
-        _admin_publisher: DataPublisher,
+            self,
+            settings: Settings,
+            _feed_publisher: DataPublisher,
+            _admin_publisher: DataPublisher,
     ):
         self._settings = settings
         self._feed_publisher = _feed_publisher
@@ -141,6 +140,6 @@ class WebSocketListener:
         Args:
             message (str): The received message as a string.
         """
-        data: Dict[str, str] = json.loads(message)
+        data: dict[str, str] = json.loads(message)
         key, value = list(data.items())[0]
         await self._feed_publisher.publish(key, value)

@@ -10,15 +10,6 @@ from fetcher import Fetcher
 from settings import Settings
 from websocket import WebSocketHandler, WebSocketListener
 
-from models import FreezeTime, LapSource, Message
-
-from starlette.status import (
-    HTTP_202_ACCEPTED,
-    HTTP_401_UNAUTHORIZED,
-    HTTP_409_CONFLICT,
-    HTTP_502_BAD_GATEWAY,
-)
-
 settings = Settings.load_from_yaml("config.yml")
 
 # Classes to hold all messages to send to the websockets
@@ -37,7 +28,7 @@ fetcher = Fetcher(settings, feed_publisher, admin_publisher)
 
 # Start background tasks when the app starts
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     asyncio.create_task(telraam.start())
     asyncio.create_task(fetcher.fetch())
     await admin_publisher.publish("active-source", settings.source.model_dump())

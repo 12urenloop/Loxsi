@@ -1,8 +1,7 @@
 import asyncio
-from typing import Dict, List
-from httpx import AsyncClient
 
 from fastapi import Response
+from httpx import AsyncClient
 from httpx import ConnectError
 
 from data_publisher import DataPublisher
@@ -20,7 +19,7 @@ class Fetcher:
     _admin_publisher: DataPublisher
 
     def __init__(
-        self, settings: Settings, feed_publisher, admin_publisher: DataPublisher
+            self, settings: Settings, feed_publisher, admin_publisher: DataPublisher
     ):
         """
         Initializes a new instance of the Fetcher class.
@@ -34,18 +33,18 @@ class Fetcher:
         self._feed_publisher = feed_publisher
         self._admin_publisher = admin_publisher
 
-    async def get_lap_source(self) -> List[Dict]:
+    async def get_lap_source(self) -> list[dict]:
         """
         Retrieves the lap sources from the Telraam API.
 
         Returns:
-            List[Dict]: A list of lap sources as dictionaries.
+            list[dict]: A list of lap sources as dictionaries.
         """
         async with AsyncClient() as client:
             lap_sources: Response = await client.get(
                 self._settings.telraam.api + "lap-source"
             )
-            lap_sources: List[Dict] = lap_sources.json()
+            lap_sources: list[dict] = lap_sources.json()
             lap_sources.append({"id": -1, "name": "accepted-laps"})
             return lap_sources
 
@@ -74,31 +73,31 @@ class Fetcher:
 
             while True:
                 try:
-                    teams: List[Dict] = await _fetch("team")  # Get all teams
-                    lap_sources: List[Dict] = (
+                    teams: list[dict] = await _fetch("team")  # Get all teams
+                    lap_sources: list[dict] = (
                         await self.get_lap_sources()
                     )  # Get all lap sources
 
                     # Get all laps according to the source
                     if self._settings.source.name == "accepted-laps":
-                        laps: List[Dict] = await _fetch("accepted-laps")
+                        laps: list[dict] = await _fetch("accepted-laps")
                     else:
-                        laps: List[Dict] = await _fetch("lap")
+                        laps: list[dict] = await _fetch("lap")
 
                     await self._admin_publisher.publish("lap-source", lap_sources)
 
                     # Create models from the fetched data
-                    teams_by_id: Dict[int, Team] = {
+                    teams_by_id: dict[int, Team] = {
                         team["id"]: Team(**team) for team in teams
                     }
 
-                    lap_sources_by_id: Dict[int, LapSource] = {
+                    lap_sources_by_id: dict[int, LapSource] = {
                         lap_source["id"]: LapSource(**lap_source)
                         for lap_source in lap_sources
                     }
 
                     # Create Lap models from the fetched data sorted by teams and lap sources
-                    laps: List[Lap] = [
+                    laps: list[Lap] = [
                         Lap(
                             team=teams_by_id[lap["teamId"]],
                             lap_source=lap_sources_by_id[lap["lapSourceId"]],
@@ -109,7 +108,7 @@ class Fetcher:
 
                     # Filter laps by source
                     if self._settings.source.name != "accepted-laps":
-                        laps: List[Lap] = [
+                        laps: list[Lap] = [
                             lap
                             for lap in laps
                             if lap.lap_source.id == self._settings.source.id
@@ -117,14 +116,14 @@ class Fetcher:
 
                     # Filter laps by freeze time
                     if self._settings.site.freeze is not None:
-                        laps: List[Lap] = [
+                        laps: list[Lap] = [
                             lap
                             for lap in laps
                             if lap.timestamp <= self._settings.site.freeze
                         ]
 
                     # Publish the amount of laps to the feed publisher
-                    counts: List[Dict] = [
+                    counts: list[dict] = [
                         Count(
                             count=len([lap for lap in laps if lap.team == team]),
                             team=team,

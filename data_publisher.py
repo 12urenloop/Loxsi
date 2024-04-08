@@ -1,5 +1,5 @@
 from asyncio import Lock, Queue
-from typing import Any, Container, Dict, List, override
+from typing import Any, Container
 
 
 class QueueManager:
@@ -7,7 +7,7 @@ class QueueManager:
     Manages a collection of queues and broadcast data to the queues.
     """
 
-    _queues: List[Queue] = []
+    _queues: list[Queue] = []
     _broadcast_lock: Lock = Lock()
 
     async def add(self) -> Queue:
@@ -57,10 +57,9 @@ class DataPublisher(QueueManager):
     Also provides a way to publish data to topics. This way one queue can easily be used for multiple data updates.
     """
 
-    _cache: Dict[str, Any] = {}
+    _cache: dict[str, Any] = {}
     _publish_lock: Lock = Lock()
 
-    @override
     async def add(self) -> Queue:
         """
         Adds a new queue and publishes cached data to the new queue.

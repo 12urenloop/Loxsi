@@ -29,7 +29,7 @@ class Count(BaseModel):
 
 
 class Message(BaseModel):
-    message: Optional[str]
+    message: str | None
 
 
 class FreezeTime(BaseModel):
