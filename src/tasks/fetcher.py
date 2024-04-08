@@ -1,88 +1,41 @@
 import asyncio
+import traceback
 
-from fastapi import Response
-from httpx import AsyncClient
 from httpx import ConnectError
 
-from data_publisher import DataPublisher
-from models import Count, Lap, LapSource, Team
-from settings import Settings
+from src.data_publisher import DataPublisher
+from src.models import Count, Lap, LapSource, Team
+from src.settings import Settings
+from src.tasks.task import Task
+from src.telraam import TelraamClient
 
 
-class Fetcher:
+class Fetcher(Task):
     """
     Fetcher class is responsible for fetching data from the Telraam API and publishing it to the appropriate channels.
     """
 
-    _settings: Settings
-    _feed_publisher: DataPublisher
-    _admin_publisher: DataPublisher
-
-    def __init__(
-            self, settings: Settings, feed_publisher, admin_publisher: DataPublisher
-    ):
-        """
-        Initializes a new instance of the Fetcher class.
-
-        Args:
-            settings (Settings): The settings object containing configuration parameters.
-            feed_publisher (DataPublisher): The data publisher for publishing feed data.
-            admin_publisher (DataPublisher): The data publisher for publishing admin data.
-        """
-        self._settings = settings
-        self._feed_publisher = feed_publisher
-        self._admin_publisher = admin_publisher
-
-    async def get_lap_source(self) -> list[dict]:
-        """
-        Retrieves the lap sources from the Telraam API.
-
-        Returns:
-            list[dict]: A list of lap sources as dictionaries.
-        """
-        async with AsyncClient() as client:
-            lap_sources: Response = await client.get(
-                self._settings.telraam.api + "lap-source"
-            )
-            lap_sources: list[dict] = lap_sources.json()
-            lap_sources.append({"id": -1, "name": "accepted-laps"})
-            return lap_sources
+    def __init__(self, settings: Settings, feed_publisher: DataPublisher, admin_publisher: DataPublisher):
+        super().__init__(settings, feed_publisher, admin_publisher)
 
     async def fetch(self):
         """
         Fetches data from the Telraam API and publishes it to the appropriate channels.
         """
-        async with AsyncClient() as client:
-
-            async def _fetch(endpoint: str):
-                """
-                Fetches data from the Telraam API.
-
-                Args:
-                    endpoint (str): The API endpoint to fetch data from.
-
-                Returns:
-                    dict: The JSON response from the API.
-                """
-                response: Response = await client.get(
-                    f"{self._settings.telraam.api}/{endpoint}"
-                )
-
-                await self._admin_publisher.publish("telraam-health", "good")
-                return response.json()
+        async with TelraamClient(self._settings, self._admin_publisher) as client:
 
             while True:
                 try:
-                    teams: list[dict] = await _fetch("team")  # Get all teams
+                    teams: list[dict] = await client.get_teams()  # Get all teams
                     lap_sources: list[dict] = (
-                        await self.get_lap_sources()
+                        await client.get_lap_sources()
                     )  # Get all lap sources
 
                     # Get all laps according to the source
                     if self._settings.source.name == "accepted-laps":
-                        laps: list[dict] = await _fetch("accepted-laps")
+                        laps: list[dict] = await client.get_accepted_laps()
                     else:
-                        laps: list[dict] = await _fetch("lap")
+                        laps: list[dict] = await client.get_laps()
 
                     await self._admin_publisher.publish("lap-source", lap_sources)
 
@@ -135,6 +88,6 @@ class Fetcher:
                 except (ConnectError, AttributeError):
                     await self._admin_publisher.publish("telraam-health", "bad")
                 except Exception as e:
-                    print(type(e), flush=True)
+                    print(traceback.format_exc(), flush=True)
 
                 await asyncio.sleep(self._settings.interval.fetch)

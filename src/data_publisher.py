@@ -1,5 +1,7 @@
 from asyncio import Lock, Queue
-from typing import Any, Container
+from typing import Any
+
+JsonData = str | int | float | dict | list
 
 
 class QueueManager:
@@ -30,12 +32,12 @@ class QueueManager:
         """
         self._queues.remove(queue)
 
-    async def _broadcast(self, data: Container):
+    async def _broadcast(self, data: tuple[str, JsonData]):
         """
         Broadcasts the given data to all queues in the collection.
 
         Args:
-            data (Container): The data to be broadcasted.
+            data (tuple): The data to be broadcasted.
         """
         async with self._broadcast_lock:
             for queue in self._queues:
@@ -74,14 +76,13 @@ class DataPublisher(QueueManager):
                 await queue.put((topic, self._cache[topic]))
         return queue
 
-    async def publish(self, topic: str, data: str):
+    async def publish(self, topic: str, data: JsonData):
         """
         Publishes data to a specific topic.
 
         Args:
             topic (str): The topic to publish the data to.
-            data (str): The data to be published.
-
+            data (JsonData): The data to be published.
         """
         async with self._publish_lock:
             if topic in self._cache and self._cache[topic] == data:

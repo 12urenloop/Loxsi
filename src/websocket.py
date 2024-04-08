@@ -1,13 +1,11 @@
 import asyncio
-import json
 
-from websockets import InvalidHandshake
 import websockets.exceptions
 from fastapi import WebSocket
 from fastapi.encoders import jsonable_encoder
 
-from data_publisher import DataPublisher
-from settings import Settings
+from src.data_publisher import DataPublisher
+from src.settings import Settings
 
 
 class WebSocketHandler:
@@ -78,68 +76,16 @@ class WebSocketHandler:
         """
 
         async def _feed():
-            topic, data = await queue.get()
-            return (topic, data)
+            return await queue.get()
 
         while True:
             try:
                 topic, data = await asyncio.wait_for(
                     _feed(), timeout=self._settings.interval.feed
                 )
-                await websocket.send_json({topic: jsonable_encoder(data)})
+                await websocket.send_json({'topic': topic, 'data': jsonable_encoder(data)})
             except asyncio.exceptions.TimeoutError:
                 await websocket.send_json({"ping": "pong"})
             except websockets.exceptions.ConnectionClosed:
                 # Handle unexpected connection closure by reconnecting
                 await self.connect(websocket)
-
-
-class WebSocketListener:
-    """
-    Represents a WebSocket listener that connects to an existing WebSocket server and handles incoming messages.
-    """
-
-    _settings: Settings
-    _feed_publisher: DataPublisher
-    _admin_publisher: DataPublisher
-
-    def __init__(
-            self,
-            settings: Settings,
-            _feed_publisher: DataPublisher,
-            _admin_publisher: DataPublisher,
-    ):
-        self._settings = settings
-        self._feed_publisher = _feed_publisher
-        self._admin_publisher = _admin_publisher
-
-    async def start(self):
-        """
-        Starts the WebSocket connection and continuously receives messages.
-
-        If the connection is closed, it will attempt to reconnect.
-        """
-        try:
-            async with websockets.connect(self._settings.telraam.ws) as ws:
-                await self._admin_publisher.publish("telraam-health", "good")
-                while True:
-                    try:
-                        message = await ws.recv()
-                        await self._receive(message)
-                    except websockets.exceptions.ConnectionClosed:
-                        await self.start()
-        except (OSError, InvalidHandshake):
-            await self._admin_publisher.publish("telraam-health", "bad")
-            await asyncio.sleep(self._settings.interval.websocket)
-            await self.start()
-
-    async def _receive(self, message: str):
-        """
-        Handles the received message by parsing and publishing the data.
-
-        Args:
-            message (str): The received message as a string.
-        """
-        data: dict[str, str] = json.loads(message)
-        key, value = list(data.items())[0]
-        await self._feed_publisher.publish(key, value)

@@ -2,36 +2,28 @@ import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import PlainTextResponse
 
-from api import router, apiRouter
-from data_publisher import DataPublisher
-from fetcher import Fetcher
-from settings import Settings
-from websocket import WebSocketHandler, WebSocketListener
-
-settings = Settings.load_from_yaml("config.yml")
-
-# Classes to hold all messages to send to the websockets
-feed_publisher = DataPublisher()
-admin_publisher = DataPublisher()
-
-# Websockets between Loxsi and the frontend
-feed_handler = WebSocketHandler(settings, feed_publisher)
-admin_feed_handler = WebSocketHandler(settings, admin_publisher)
-# Websocket between Loxsi and Telraam
-telraam = WebSocketListener(settings, feed_publisher, admin_publisher)
-
-# Fetcher to periodically get data from the Telraam API
-fetcher = Fetcher(settings, feed_publisher, admin_publisher)
+from src.dependecies import get_settings, get_admin_publisher, get_feed_publisher
+from src.routes import router
+from src.tasks.fetcher import Fetcher
+from src.tasks.listener import WebSocketListener
 
 
 # Start background tasks when the app starts
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    asyncio.create_task(telraam.start())
-    asyncio.create_task(fetcher.fetch())
-    await admin_publisher.publish("active-source", settings.source.model_dump())
+    settings = await get_settings()
+    feed_publisher = await get_feed_publisher()
+    admin_publisher = await get_admin_publisher()
+
+    asyncio.create_task(WebSocketListener(settings, feed_publisher, admin_publisher).start())
+    asyncio.create_task(Fetcher(settings, feed_publisher, admin_publisher).fetch())
+
+    await admin_publisher.publish("active-source", settings.source.dict())
+
     yield  # Signal that the startup can go ahead
 
 
@@ -43,5 +35,10 @@ app = FastAPI(
 )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-api_router = apiRouter.setup(settings, feed_handler, admin_feed_handler, fetcher)
 app.include_router(router)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    print(exc.with_traceback(), flush=True)
+    return PlainTextResponse(str(exc), status_code=400)

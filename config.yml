@@ -1,17 +1,17 @@
 admin:
-    name: admin
-    password: admin
+  name: admin
+  password: admin
 interval:
-    feed: 3
-    fetch: 2
-    websocket: 5
-message: null
-source:
-    id: -1
-    name: accepted-laps
+  feed: 3
+  fetch: 2
+  websocket: 5
+message: Je Mama
 site:
-    show_live: True
-    freeze: null
+  freeze: null
+  show_live: true
+source:
+  id: -1
+  name: accepted-laps
 telraam:
-    api: https://telraam.velteq.com # http://host.docker.internal:8080
-    ws: ws://host.docker.internal:8765
+  api: http://localhost:8080
+  ws: ws://localhost:8080
