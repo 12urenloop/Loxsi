@@ -51,5 +51,6 @@ class WebSocketListener:
             message (str): The received message as a string.
         """
         data: dict[str, str] = json.loads(message)
-        key, value = list(data.items())[0]
-        await self._feed_publisher.publish(key, value)
+        if "topic" not in data or "data" not in data:
+            raise ValueError("Invalid message from telraam")
+        await self._feed_publisher.publish(data["topic"], data["data"])
