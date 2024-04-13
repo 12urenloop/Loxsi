@@ -30,7 +30,7 @@ async def _ping(_request: Request):
     return {"message": "Pong!"}
 
 
-@router.post("/api/use/{id}", dependencies=[Depends(is_admin)])
+@router.post("/api/use/{lap_source_id}", dependencies=[Depends(is_admin)])
 async def _post_lap_source(
         lap_source_id: int,
         settings: Annotated[Settings, Depends(get_settings)],
