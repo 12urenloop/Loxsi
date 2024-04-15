@@ -9,8 +9,12 @@ class QueueManager:
     Manages a collection of queues and broadcast data to the queues.
     """
 
-    _queues: list[Queue] = []
-    _broadcast_lock: Lock = Lock()
+    _queues: list[Queue]
+    _broadcast_lock: Lock
+
+    def __init__(self) -> None:
+        self._queues = list()
+        self._broadcast_lock = Lock()
 
     async def add(self) -> Queue:
         """
@@ -59,8 +63,13 @@ class DataPublisher(QueueManager):
     Also provides a way to publish data to topics. This way one queue can easily be used for multiple data updates.
     """
 
-    _cache: dict[str, Any] = {}
-    _publish_lock: Lock = Lock()
+    _cache: dict[str, Any]
+    _publish_lock: Lock
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._cache = dict()
+        self._publish_lock = Lock()
 
     async def add(self) -> Queue:
         """
