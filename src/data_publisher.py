@@ -60,13 +60,10 @@ class DataPublisher(QueueManager):
     Also provides a way to publish data to topics. This way one queue can easily be used for multiple data updates.
     """
 
-    _cache: dict[str, Any]
-    _publish_lock: Lock
-
     def __init__(self) -> None:
         super().__init__()
-        self._cache = dict()
-        self._publish_lock = Lock()
+        self._cache: dict[str, Any] = dict()
+        self._publish_lock: Lock = Lock()
 
     async def add(self) -> Queue:
         """
