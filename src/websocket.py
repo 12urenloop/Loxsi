@@ -1,6 +1,6 @@
 import asyncio
 
-import websockets.exceptions
+import starlette.websockets
 from fastapi import WebSocket
 from fastapi.encoders import jsonable_encoder
 
@@ -8,25 +8,49 @@ from src.data_publisher import DataPublisher
 from src.settings import Settings
 
 
+class ConnectionTracker:
+    """
+    Counts the total of active websocket connections
+    """
+
+    def __init__(self, admin_publisher: DataPublisher):
+        self._count: int = 0
+        self._admin_publisher: DataPublisher = admin_publisher
+
+    async def inc(self):
+        self._count += 1
+        await self._notify()
+
+    async def dec(self):
+        self._count -= 1
+        await self._notify()
+
+    async def _notify(self):
+        await self._admin_publisher.publish('active-connections', self._count)
+
+
 class WebSocketHandler:
     """
     Handles WebSocket connections and message handling.
     """
 
-    _settings: Settings
-    _publisher: DataPublisher
-
-    def __init__(self, settings: Settings, publisher: DataPublisher):
+    def __init__(
+            self,
+            settings: Settings,
+            publisher: DataPublisher,
+            connection_tracker: ConnectionTracker
+    ):
         """
         Initializes a new instance of the WebSocket class.
 
         Args:
             settings (Settings): The settings object containing configuration options.
             publisher (DataPublisher): The data publisher object used for publishing data.
-
+            connection_tracker (ConnectionTracker): Track the connection count.
         """
-        self._settings = settings
-        self._publisher = publisher
+        self._settings: Settings = settings
+        self._publisher: DataPublisher = publisher
+        self._connection_tracker: ConnectionTracker = connection_tracker
 
     async def connect(self, websocket: WebSocket):
         """
@@ -42,24 +66,13 @@ class WebSocketHandler:
         await websocket.accept()
 
         queue = await self._publisher.add()
+        await self._connection_tracker.inc()
 
         try:
-            await self._handle_connect(websocket, queue)
+            await self._send(websocket, queue)
         finally:
+            await self._connection_tracker.dec()
             await self._publisher.remove(queue)
-
-    async def _handle_connect(self, websocket: WebSocket, queue: asyncio.Queue):
-        """
-        Handles the WebSocket connection and message handling.
-
-        Args:
-            websocket (WebSocket): The WebSocket connection object.
-            queue (asyncio.Queue): The queue for receiving messages from the data publisher.
-
-        Notes:
-            This method calls the `_send` method to start sending messages to the WebSocket client.
-        """
-        await self._send(websocket, queue)
 
     async def _send(self, websocket: WebSocket, queue: asyncio.Queue):
         """
@@ -80,12 +93,17 @@ class WebSocketHandler:
 
         while True:
             try:
-                topic, data = await asyncio.wait_for(
-                    _feed(), timeout=self._settings.interval.feed
-                )
-                await websocket.send_json({'topic': topic, 'data': jsonable_encoder(data)})
-            except asyncio.exceptions.TimeoutError:
-                await websocket.send_json({"ping": "pong"})
-            except websockets.exceptions.ConnectionClosed:
-                # Handle unexpected connection closure by reconnecting
-                await self.connect(websocket)
+                try:
+                    topic, data = await asyncio.wait_for(
+                        _feed(), timeout=self._settings.interval.feed
+                    )
+                    await websocket.send_json({'topic': topic, 'data': jsonable_encoder(data)})
+                except asyncio.exceptions.TimeoutError:
+                    await websocket.send_json({'ping': 'pong'})
+                except Exception as e:
+                    raise e
+            except starlette.websockets.WebSocketDisconnect:
+                return
+            except Exception as e:
+                print(e)
+                return

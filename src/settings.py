@@ -28,6 +28,7 @@ class Site(BaseModel):
 
     show_live: bool  # Show the live visual
     freeze: int | None  # Freeze the site
+    message: str | None  # MOTD banner content
 
 
 class Source(BaseModel):
@@ -55,7 +56,6 @@ class Settings(BaseModel):
 
     admin: Admin
     interval: Interval
-    message: str | None
     site: Site
     source: Source
     source_file: str

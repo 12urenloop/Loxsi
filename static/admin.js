@@ -104,6 +104,12 @@ async function sendMessage(message) {
     })
 }
 
+async function deleteMessage() {
+    await fetch('/api/message', {
+        method: "DELETE"
+    })
+}
+
 async function sendTime(message) {
     await fetch('/api/freeze', {
         method: "POST",

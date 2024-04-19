@@ -2,12 +2,12 @@ admin:
   name: admin
   password: admin
 interval:
-  feed: 3
+  feed: 10
   fetch: 2
   websocket: 5
-message: Je Mama
 site:
-  freeze: null
+  freeze: 3600000
+  message: Je Mama
   show_live: true
 source:
   id: -1
