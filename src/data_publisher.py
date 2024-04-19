@@ -9,12 +9,9 @@ class QueueManager:
     Manages a collection of queues and broadcast data to the queues.
     """
 
-    _queues: list[Queue]
-    _broadcast_lock: Lock
-
     def __init__(self) -> None:
-        self._queues = list()
-        self._broadcast_lock = Lock()
+        self._queues: list[Queue] = list()
+        self._broadcast_lock: Lock = Lock()
 
     async def add(self) -> Queue:
         """
