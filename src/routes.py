@@ -114,7 +114,7 @@ async def _feed(
     await feed_handler.connect(websocket)
 
 
-@router.websocket("/admin/feed")
+@router.websocket("/admin/feed", dependencies=[Depends(is_admin)])
 async def _feed_admin(
         websocket: WebSocket,
         admin_feed_handler: Annotated[WebSocketHandler, Depends(get_admin_feed_handler)]
