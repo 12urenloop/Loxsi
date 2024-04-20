@@ -7,8 +7,7 @@ interval:
   websocket: 5
 site:
   freeze: null
-  message: Je ----
-  show_live: true
+  message: test-message
 source:
   id: -1
   name: accepted-laps

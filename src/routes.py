@@ -100,10 +100,12 @@ async def _post_freeze(
 @router.delete("/api/freeze", status_code=HTTP_202_ACCEPTED, dependencies=[Depends(is_admin)])
 async def _delete_freeze(
         settings: Annotated[Settings, Depends(get_settings)],
+        feed_publisher: Annotated[DataPublisher, Depends(get_feed_publisher)],
         admin_publisher: Annotated[DataPublisher, Depends(get_admin_publisher)]
 ):
     settings.site.freeze = None
     settings.persist()
+    await feed_publisher.publish("frozen", False)
     await admin_publisher.publish("freeze", None)
 
 

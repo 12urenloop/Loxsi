@@ -26,7 +26,6 @@ class Site(BaseModel):
     Site settings
     """
 
-    show_live: bool  # Show the live visual
     freeze: int | None  # Freeze the site
     message: str | None  # MOTD banner content
 

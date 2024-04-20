@@ -17,11 +17,15 @@ websocket.onopen = (_event) => {
 
 websocket.onmessage = (event) => {
     let data = JSON.parse(event.data)
-    console.log(data)
-    if (data['topic'] === 'counts') {
-        setData(data.data);
-    } else if (data['topic'] === 'message') {
-        setMessage(data.data);
+    if (!('ping' in data)) {
+        console.log(data)
+        if (data['topic'] === 'counts') {
+            setData(data.data);
+        } else if (data['topic'] === 'message') {
+            setMessage(data.data);
+        } else if (data['topic'] === 'frozen') {
+            setFrozen(data.data)
+        }
     }
 };
 
@@ -72,13 +76,15 @@ let message_handlers = {
 
 admin_feed.onmessage = e => {
     let data = JSON.parse(e.data)
-    console.log(data)
     if ('topic' in data && 'data' in data) {
+        console.log(data)
         if (data['topic'] in message_handlers) {
             message_handlers[data['topic']](data['data'])
         }
     } else {
-        console.error(`Invalid message in admin feed: ${data}`)
+        if (!('ping' in data)) {
+            console.error(`Invalid message in admin feed: ${data}`)
+        }
     }
 }
 // endregion
@@ -164,6 +170,9 @@ function setData(res) {
 }
 
 function setMessage(message) {
-    console.log(message)
     document.getElementById('message').innerText = message;
+}
+
+function setFrozen(isFrozen) {
+    document.getElementById('frozen-message').innerText = isFrozen ? 'Frozen: Yes' : 'Frozen: No'
 }
