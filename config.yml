@@ -6,8 +6,8 @@ interval:
   fetch: 2
   websocket: 5
 site:
-  freeze: 3600000
-  message: Je Mama
+  freeze: null
+  message: Je ----
   show_live: true
 source:
   id: -1
