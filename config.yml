@@ -1,6 +1,7 @@
 admin:
   name: admin
   password: admin
+api_token: lekey
 interval:
   feed: 10
   fetch: 2

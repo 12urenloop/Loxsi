@@ -34,3 +34,7 @@ class Message(BaseModel):
 
 class FreezeTime(BaseModel):
     time: int
+
+
+class ConnectionCount(BaseModel):
+    count: int

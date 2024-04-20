@@ -37,5 +37,9 @@ async def get_admin_feed_handler() -> WebSocketHandler:
     return _admin_feed_handler
 
 
+async def get_connection_tracker() -> ConnectionTracker:
+    return _connection_tracker
+
+
 async def get_templates() -> Jinja2Templates:
     return _templates
