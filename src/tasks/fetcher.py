@@ -69,11 +69,16 @@ class Fetcher(Task):
 
                     # Filter laps by freeze time
                     if self._settings.site.freeze is not None:
-                        laps: list[Lap] = [
+                        new_laps: list[Lap] = [
                             lap
                             for lap in laps
                             if lap.timestamp <= self._settings.site.freeze
                         ]
+
+                        # If the filter removed laps, we now the scoreboard is frozen
+                        await self._feed_publisher.publish("frozen", len(new_laps) != len(laps))
+
+                        laps: list[Lap] = new_laps
 
                     # Publish the amount of laps to the feed publisher
                     counts: list[dict] = [
