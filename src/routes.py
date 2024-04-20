@@ -69,11 +69,21 @@ async def _post_lap_source(
 async def _post_message(
         message: Message,
         settings: Annotated[Settings, Depends(get_settings)],
-        feed_publisher: Annotated[Settings, Depends(get_feed_publisher)]
+        feed_publisher: Annotated[DataPublisher, Depends(get_feed_publisher)]
 ):
-    settings.message = message.message
+    settings.site.message = message.message
     settings.persist()
     await feed_publisher.publish("message", message.message)
+
+
+@router.delete("/api/message", status_code=HTTP_202_ACCEPTED, dependencies=[Depends(is_admin)])
+async def _delete_message(
+        settings: Annotated[Settings, Depends(get_settings)],
+        feed_publisher: Annotated[DataPublisher, Depends(get_feed_publisher)]
+):
+    settings.site.message = None
+    settings.persist()
+    await feed_publisher.publish("message", None)
 
 
 @router.post("/api/freeze", status_code=HTTP_202_ACCEPTED, dependencies=[Depends(is_admin)])
@@ -82,17 +92,17 @@ async def _post_freeze(
         settings: Annotated[Settings, Depends(get_settings)],
         admin_publisher: Annotated[DataPublisher, Depends(get_admin_publisher)]
 ):
-    settings.freeze = time.time
+    settings.site.freeze = time.time
     settings.persist()
     await admin_publisher.publish("freeze", time.time)
 
 
-@router.delete("/api/freeze", status_code=HTTP_202_ACCEPTED, dependencies=[Depends(is_admin)], )
+@router.delete("/api/freeze", status_code=HTTP_202_ACCEPTED, dependencies=[Depends(is_admin)])
 async def _delete_freeze(
         settings: Annotated[Settings, Depends(get_settings)],
         admin_publisher: Annotated[DataPublisher, Depends(get_admin_publisher)]
 ):
-    settings.freeze = None
+    settings.site.freeze = None
     settings.persist()
     await admin_publisher.publish("freeze", None)
 
@@ -102,7 +112,6 @@ async def _admin(
         request: Request,
         templates: Annotated[Jinja2Templates, Depends(get_templates)],
 ):
-    print("Got here!", flush=True)
     return templates.TemplateResponse("admin.html", {"request": request})
 
 

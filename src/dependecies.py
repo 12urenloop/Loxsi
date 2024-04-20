@@ -2,15 +2,17 @@ from starlette.templating import Jinja2Templates
 
 from src.data_publisher import DataPublisher
 from src.settings import Settings
-from src.websocket import WebSocketHandler
+from src.websocket import WebSocketHandler, ConnectionTracker
 
 _settings = Settings.load_from_yaml("config.yml")
 
 _feed_publisher = DataPublisher()
-_feed_handler = WebSocketHandler(_settings, _feed_publisher)
-
 _admin_publisher = DataPublisher()
-_admin_feed_handler = WebSocketHandler(_settings, _admin_publisher)
+
+_connection_tracker = ConnectionTracker(_admin_publisher)
+
+_feed_handler = WebSocketHandler(_settings, _feed_publisher, _connection_tracker)
+_admin_feed_handler = WebSocketHandler(_settings, _admin_publisher, _connection_tracker)
 
 _templates = Jinja2Templates(directory="templates")
 
