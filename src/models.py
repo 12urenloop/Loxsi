@@ -2,7 +2,6 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-
 # Define the models for the received from Telraam
 
 
@@ -14,6 +13,12 @@ class LapSource(BaseModel):
 class Team(BaseModel):
     id: int
     name: str
+
+
+class Station(BaseModel):
+    id: int
+    distanceFromStart: int
+    progress: float
 
 
 class Lap(BaseModel):

@@ -4,7 +4,7 @@ import traceback
 from httpx import ConnectError
 
 from src.data_publisher import DataPublisher
-from src.models import Count, Lap, LapSource, Team
+from src.models import Count, Lap, LapSource, Station, Team
 from src.settings import Settings
 from src.tasks.task import Task
 from src.telraam import TelraamClient
@@ -90,6 +90,22 @@ class Fetcher(Task):
                     ]
 
                     await self._feed_publisher.publish("counts", counts)
+
+                    stations: list[dict] = await client.get_stations()  # Get all stations
+                    stations.sort(key=lambda x: int(x["distanceFromStart"]))
+                    stations: list[Station] = [
+                        Station(
+                            progress=station["distanceFromStart"] / (
+                                stations[-1]["distanceFromStart"] + self._settings.start_offset
+                            ),
+                            **station
+                        ) for station in stations
+                    ]
+
+                    await self._feed_publisher.publish("stations", stations)
+
+                    print(stations, flush=True)
+
                 except (ConnectError, AttributeError):
                     await self._admin_publisher.publish("telraam-health", "bad")
                 except Exception as e:
