@@ -59,6 +59,7 @@ class Settings(BaseModel):
     source: Source
     source_file: str
     telraam: Telraam
+    api_token: str
 
     def persist(self):
         """

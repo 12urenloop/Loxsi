@@ -15,12 +15,12 @@ from src.auth import is_admin
 from src.data_publisher import DataPublisher
 from src.dependecies import (
     get_settings, get_admin_publisher, get_templates, get_feed_publisher, get_feed_handler,
-    get_admin_feed_handler
+    get_admin_feed_handler, get_connection_tracker
 )
-from src.models import FreezeTime, LapSource, Message
+from src.models import FreezeTime, LapSource, Message, ConnectionCount
 from src.settings import Settings
 from src.telraam import TelraamClient
-from src.websocket import WebSocketHandler
+from src.websocket import WebSocketHandler, ConnectionTracker
 
 router = APIRouter()
 
@@ -108,6 +108,19 @@ async def _delete_freeze(
     await feed_publisher.publish("frozen", False)
     await admin_publisher.publish("freeze", None)
 
+
+@router.get("/api/count", status_code=HTTP_200_OK, response_model=ConnectionCount)
+async def _count(
+    request: Request,
+    settings: Annotated[Settings, Depends(get_settings)],
+    connection_tracker: Annotated[ConnectionTracker, Depends(get_connection_tracker)],
+):
+    if 'Loxsi-Key' in request.headers and request.headers.get('Loxsi-Key') == settings.api_token:
+        return ConnectionCount(
+            count=await connection_tracker.count()
+        )
+    else:
+        raise HTTPException(status_code=403)
 
 @router.get("/admin", status_code=HTTP_200_OK, dependencies=[Depends(is_admin)], response_class=HTMLResponse)
 async def _admin(

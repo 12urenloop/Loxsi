@@ -17,6 +17,9 @@ class ConnectionTracker:
         self._count: int = 0
         self._admin_publisher: DataPublisher = admin_publisher
 
+    async def count(self) -> int:
+        return self._count
+
     async def inc(self):
         self._count += 1
         await self._notify()
