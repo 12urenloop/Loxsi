@@ -76,6 +76,10 @@ class DataPublisher(QueueManager):
         queue: Queue = await super().add()
         async with self._publish_lock:
             for topic in self._cache:
+                if topic == "position":
+                    for team_id in self._cache[topic]:
+                        await queue.put((topic, self._cache[topic][team_id]))
+                    continue
                 await queue.put((topic, self._cache[topic]))
         return queue
 
@@ -88,6 +92,11 @@ class DataPublisher(QueueManager):
             data (JsonData): The data to be published.
         """
         async with self._publish_lock:
+            if topic == "position":
+                self._cache[topic][data["team_id"]] = data
+                await self._broadcast((topic, data))
+                return
+
             if topic in self._cache and self._cache[topic] == data:
                 return
             self._cache[topic] = data
