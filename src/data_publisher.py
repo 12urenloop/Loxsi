@@ -78,8 +78,9 @@ class DataPublisher(QueueManager):
         async with self._publish_lock:
             for topic in self._cache:
                 if topic == "position":
-                    for team_id in self._cache[topic]:
-                        await queue.put((topic, self._cache[topic][team_id]))
+                    position_data = [self._cache[topic][team_id] for team_id in self._cache[topic]]
+                    # for team_id in self._cache[topic]:
+                    await queue.put((topic, position_data))
                     continue
                 await queue.put((topic, self._cache[topic]))
         return queue
@@ -94,7 +95,8 @@ class DataPublisher(QueueManager):
         """
         async with self._publish_lock:
             if topic == "position":
-                self._cache[topic][str(data["team_id"])] = data
+                for team_data in data:
+                    self._cache[topic][team_data["team_id"]] = team_data
                 await self._broadcast((topic, data))
                 return
 
