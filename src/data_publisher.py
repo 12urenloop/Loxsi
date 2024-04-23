@@ -94,7 +94,7 @@ class DataPublisher(QueueManager):
         """
         async with self._publish_lock:
             if topic == "position":
-                self._cache[topic][data["team_id"]] = data
+                self._cache[topic][str(data["team_id"])] = data
                 await self._broadcast((topic, data))
                 return
 
