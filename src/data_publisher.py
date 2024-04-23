@@ -63,6 +63,7 @@ class DataPublisher(QueueManager):
     def __init__(self) -> None:
         super().__init__()
         self._cache: dict[str, Any] = dict()
+        self._cache["position"] = {}
         self._publish_lock: Lock = Lock()
 
     async def add(self) -> Queue:
