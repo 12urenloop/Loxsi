@@ -79,7 +79,6 @@ class DataPublisher(QueueManager):
             for topic in self._cache:
                 if topic == "position":
                     position_data = [self._cache[topic][team_id] for team_id in self._cache[topic]]
-                    # for team_id in self._cache[topic]:
                     await queue.put((topic, position_data))
                     continue
                 await queue.put((topic, self._cache[topic]))
