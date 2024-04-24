@@ -63,6 +63,7 @@ class DataPublisher(QueueManager):
     def __init__(self) -> None:
         super().__init__()
         self._cache: dict[str, Any] = dict()
+        self._cache["position"] = {}
         self._publish_lock: Lock = Lock()
 
     async def add(self) -> Queue:
@@ -75,8 +76,13 @@ class DataPublisher(QueueManager):
         """
         queue: Queue = await super().add()
         async with self._publish_lock:
+            # Publish cached data to the new queue
+            # Add the position data last
             for topic in self._cache:
-                await queue.put((topic, self._cache[topic]))
+                if topic != "position":
+                    await queue.put((topic, self._cache[topic]))
+            position_data = [self._cache["position"][team_id] for team_id in self._cache["position"]]
+            await queue.put(("position", position_data))
         return queue
 
     async def publish(self, topic: str, data: JsonData):
@@ -88,6 +94,12 @@ class DataPublisher(QueueManager):
             data (JsonData): The data to be published.
         """
         async with self._publish_lock:
+            if topic == "position":
+                for team_data in data:
+                    self._cache[topic][team_data["team_id"]] = team_data
+                await self._broadcast((topic, data))
+                return
+
             if topic in self._cache and self._cache[topic] == data:
                 return
             self._cache[topic] = data
