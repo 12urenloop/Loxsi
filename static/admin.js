@@ -134,6 +134,12 @@ async function deleteTime() {
     })
 }
 
+async function forceClientRefresh() {
+    await fetch('/api/force-client-refresh', {
+        method: "POST",
+    })
+}
+
 function setData(res) {
     if (!Array.isArray(res)) {
         console.error('Couldn\'t set teams bcs parsed WS data is not an array')

@@ -102,5 +102,6 @@ class DataPublisher(QueueManager):
 
             if topic in self._cache and self._cache[topic] == data:
                 return
-            self._cache[topic] = data
+            if topic != "refresh":
+                self._cache[topic] = data
             await self._broadcast((topic, data))
