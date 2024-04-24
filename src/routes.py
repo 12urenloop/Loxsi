@@ -29,6 +29,11 @@ router = APIRouter()
 async def _ping(_request: Request):
     return {"message": "Pong!"}
 
+@router.post("/api/force-client-refresh", dependencies=[Depends(is_admin)])
+async def _force_client_refresh(
+        feed_publisher: Annotated[DataPublisher, Depends(get_feed_publisher)]
+):
+    await feed_publisher.publish("refresh", True)
 
 @router.post("/api/use/{lap_source_id}", dependencies=[Depends(is_admin)])
 async def _post_lap_source(
