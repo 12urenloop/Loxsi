@@ -9,7 +9,7 @@ const COLORS = [
 ];
 
 // region Websocket
-let websocket = new WebSocket(`ws://${location.host}/feed`);
+let websocket = new WebSocket(`wss://${location.host}/feed`);
 
 websocket.onopen = (_event) => {
     document.getElementById('chart-message').remove();
@@ -33,7 +33,7 @@ websocket.onclose = (_event) => {
 }
 
 // region Admin feed
-let admin_feed = new WebSocket(`ws://${location.host}/admin/feed`);
+let admin_feed = new WebSocket(`wss://${location.host}/admin/feed`);
 
 admin_feed.onopen = () => {
     document.getElementById('active-source').innerText = "Connecting..."
