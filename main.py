@@ -6,7 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import PlainTextResponse
 
-from src.dependecies import get_settings, get_admin_publisher, get_feed_publisher
+from src.dependecies import get_settings, get_admin_publisher, get_feed_publisher, get_storeman
 from src.routes import router
 from src.tasks.fetcher import Fetcher
 from src.tasks.listener import WebSocketListener
@@ -18,9 +18,12 @@ async def lifespan(_app: FastAPI):
     settings = await get_settings()
     feed_publisher = await get_feed_publisher()
     admin_publisher = await get_admin_publisher()
+    storeman = await get_storeman()
+
+    await storeman.loadScores()
 
     asyncio.create_task(WebSocketListener(settings, feed_publisher, admin_publisher).start())
-    asyncio.create_task(Fetcher(settings, feed_publisher, admin_publisher).fetch())
+    asyncio.create_task(Fetcher(settings, feed_publisher, admin_publisher, storeman).fetch())
 
     await feed_publisher.publish("frozen", settings.site.freeze is not None)
     await feed_publisher.publish("message", settings.site.message)
