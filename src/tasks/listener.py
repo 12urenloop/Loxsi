@@ -55,12 +55,17 @@ class WebSocketListener:
             raise ValueError("Invalid message from telraam")
 
         # Only let messages from the selected position source through
-        if "position" in data["topic"]:
-            topics = data["topic"].split("_", 1)
-            if len(topics) != 2:
+        if data["topic"] == "position":
+            position_data = data["data"]
+            if "positioner" not in position_data or "positions" not in position_data:
                 raise ValueError("Invalid message from telraam")
 
-            if topics[1] != self._settings.position_source.name:
+            if position_data["positioner"] != self._settings.position_source.name:
                 return
+
+            await self._feed_publisher.publish(
+                data["topic"], position_data["positions"]
+            )
+            return
 
         await self._feed_publisher.publish(data["topic"], data["data"])
