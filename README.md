@@ -2,7 +2,7 @@
 
 # Setup
 
-Make sure you have docker and docker compose
+Make sure you have docker, docker compose & uv
 
 ## Configure
 
@@ -40,6 +40,14 @@ The development container supports hot reloading.
 
 ```bash
 docker-compose -f docker-compose.dev.yml up
+```
+
+or run it locally
+
+```bash
+uv venv
+source .venv/bin/activate
+uv run fastapi dev
 ```
 
 ## Production
