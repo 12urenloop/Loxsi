@@ -5,21 +5,15 @@ from src.settings import Settings
 
 
 class TelraamClient(AsyncClient):
-
     def __init__(
-            self,
-            settings: Settings,
-            admin_publisher: DataPublisher,
-            *args, **kwargs
+        self, settings: Settings, admin_publisher: DataPublisher, *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
         self._settings: Settings = settings
         self._admin_publisher: DataPublisher = admin_publisher
 
     async def _get(self, endpoint: str) -> list:
-        response: Response = await self.get(
-            f"{self._settings.telraam.api}/{endpoint}"
-        )
+        response: Response = await self.get(f"{self._settings.telraam.api}/{endpoint}")
 
         await self._admin_publisher.publish("telraam-health", "good")
 
@@ -29,6 +23,9 @@ class TelraamClient(AsyncClient):
         lap_sources = await self._get("lap-source")
         lap_sources.append({"id": -1, "name": "accepted-laps"})
         return lap_sources
+
+    async def get_position_sources(self) -> list[dict]:
+        return await self._get("position-source")
 
     async def get_laps(self) -> list[dict]:
         return await self._get("lap")

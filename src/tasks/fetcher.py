@@ -15,7 +15,12 @@ class Fetcher(Task):
     Fetcher class is responsible for fetching data from the Telraam API and publishing it to the appropriate channels.
     """
 
-    def __init__(self, settings: Settings, feed_publisher: DataPublisher, admin_publisher: DataPublisher):
+    def __init__(
+        self,
+        settings: Settings,
+        feed_publisher: DataPublisher,
+        admin_publisher: DataPublisher,
+    ):
         super().__init__(settings, feed_publisher, admin_publisher)
 
     async def fetch(self):
@@ -23,21 +28,25 @@ class Fetcher(Task):
         Fetches data from the Telraam API and publishes it to the appropriate channels.
         """
         async with TelraamClient(self._settings, self._admin_publisher) as client:
-
             while True:
                 try:
                     teams: list[dict] = await client.get_teams()  # Get all teams
-                    lap_sources: list[dict] = (
-                        await client.get_lap_sources()
-                    )  # Get all lap sources
+                    lap_sources: list[
+                        dict
+                    ] = await client.get_lap_sources()  # Get all lap sources
 
                     # Get all laps according to the source
-                    if self._settings.source.name == "accepted-laps":
+                    if self._settings.lap_source.name == "accepted-laps":
                         laps: list[dict] = await client.get_accepted_laps()
                     else:
                         laps: list[dict] = await client.get_laps()
 
                     await self._admin_publisher.publish("lap-source", lap_sources)
+
+                    position_sources: list[dict] = await client.get_position_sources()
+                    await self._admin_publisher.publish(
+                        "position-source", position_sources
+                    )
 
                     # Create models from the fetched data
                     teams_by_id: dict[int, Team] = {
@@ -60,11 +69,11 @@ class Fetcher(Task):
                     ]
 
                     # Filter laps by source
-                    if self._settings.source.name != "accepted-laps":
+                    if self._settings.lap_source.name != "accepted-laps":
                         laps: list[Lap] = [
                             lap
                             for lap in laps
-                            if lap.lap_source.id == self._settings.source.id
+                            if lap.lap_source.id == self._settings.lap_source.id
                         ]
 
                     # Filter laps by freeze time
@@ -76,7 +85,9 @@ class Fetcher(Task):
                         ]
 
                         # If the filter removed laps, we now the scoreboard is frozen
-                        await self._feed_publisher.publish("frozen", len(new_laps) != len(laps))
+                        await self._feed_publisher.publish(
+                            "frozen", len(new_laps) != len(laps)
+                        )
 
                         laps: list[Lap] = new_laps
 

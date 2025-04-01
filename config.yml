@@ -6,12 +6,15 @@ interval:
   feed: 10
   fetch: 2
   websocket: 5
+lap_source:
+  id: 5
+  name: robust-lapper
+position_source:
+  id: 1
+  name: nostradamus
 site:
   freeze: null
   message: test-message
-source:
-  id: -1
-  name: accepted-laps
 telraam:
   api: http://localhost:8080
   ws: ws://localhost:8080/ws

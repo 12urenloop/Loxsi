@@ -30,9 +30,18 @@ class Site(BaseModel):
     message: str | None  # MOTD banner content
 
 
-class Source(BaseModel):
+class LapSource(BaseModel):
     """
-    lap Source settings
+    Lap source settings
+    """
+
+    id: int
+    name: str | None
+
+
+class PositionSource(BaseModel):
+    """
+    Positioner source settingd
     """
 
     id: int
@@ -56,7 +65,8 @@ class Settings(BaseModel):
     admin: Admin
     interval: Interval
     site: Site
-    source: Source
+    lap_source: LapSource
+    position_source: PositionSource
     source_file: str
     telraam: Telraam
     api_token: str
@@ -73,7 +83,7 @@ class Settings(BaseModel):
             )
 
     @classmethod
-    def load_from_yaml(cls, file_path: str) -> 'Settings':
+    def load_from_yaml(cls, file_path: str) -> "Settings":
         """
         Load settings from a YAML file.
 

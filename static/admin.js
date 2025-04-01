@@ -35,13 +35,6 @@ websocket.onclose = (_event) => {
 // region Admin feed
 let admin_feed = new WebSocket(`${location.protocol == "https:" ? "wss" : "ws"}://${location.host}/admin/feed`);
 
-admin_feed.onopen = () => {
-  document.getElementById('active-source').innerText = "Connecting..."
-  document.getElementById('active-connections').innerText = "Connecting..."
-  document.getElementById('sources').innerHTML =
-    '<div class="col l6 m12 s12" style="margin-top: 20px">Connecting...</div>'
-}
-
 let message_handlers = {
   'telraam-health': data => {
     let root = document.getElementById('root')
@@ -53,17 +46,28 @@ let message_handlers = {
       root.classList.add('tui-bg-blue-black')
     }
   },
-  'active-source': data => {
-    document.getElementById('active-source').innerText = data['name']
+  'active-lap-source': data => {
+    document.getElementById('active-lap-source').innerText = data['name']
+  },
+  'active-position-source': data => {
+    document.getElementById('active-position-source').innerText = data['name']
   },
   'lap-source': data => {
-    let sources = document.getElementById('sources')
+    let sources = document.getElementById('lap_sources')
     sources.innerHTML = ""
-    for (let lap_source of data) {
-      console.log(lap_source)
+    for (const lap_source of data) {
       sources.innerHTML += '<div class="col l6 m12 s12" style="margin-top: 20px">' +
-        `<button class="tui-button white-168 white-255-hover" onclick="use(this)" value="${lap_source.id}" style="width: 100%">` +
+        `<button class="tui-button white-168 white-255-hover" onclick="lapUse(this)" value="${lap_source.id}" style="width: 100%">` +
         `${lap_source.name} </button></div>`
+    }
+  },
+  'position-source': data => {
+    let sources = document.getElementById('position_sources')
+    sources.innerHTML = ""
+    for (const position_source of data) {
+      sources.innerHTML += '<div class="col l6 m12 s12" style="margin-top: 20px">' +
+        `<button class="tui-button white-168 white-255-hover" onclick="positionUse(this)" value="${position_source.id}" style="width: 100%">` +
+        `${position_source.name} </button></div>`
     }
   },
   'active-connections': data => {
@@ -90,11 +94,15 @@ admin_feed.onmessage = e => {
 // endregion
 // endregion
 
-function use(element) {
-  fetch(`/api/use/${element.value}`, {
+function lapUse(element) {
+  fetch(`/api/lap/use/${element.value}`, {
     method: "POST"
-  }).then(res => {
-    console.log(res);
+  })
+}
+
+function positionUse(element) {
+  fetch(`/api/position/use/${element.value}`, {
+    method: "POST"
   })
 }
 
