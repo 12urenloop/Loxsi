@@ -7,5 +7,5 @@ services:
       dockerfile: Dockerfile
     container_name: loxsi
     ports:
-      - "8080:80"
-    command: "uvicorn --host 0.0.0.0 --port 80 main:app"
+      - "8000:80"
+    command: "/app/.venv/bin/uvicorn --host 0.0.0.0 --port 80 main:app"
