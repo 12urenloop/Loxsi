@@ -14,10 +14,10 @@ class WebSocketListener:
     """
 
     def __init__(
-            self,
-            settings: Settings,
-            _feed_publisher: DataPublisher,
-            _admin_publisher: DataPublisher,
+        self,
+        settings: Settings,
+        _feed_publisher: DataPublisher,
+        _admin_publisher: DataPublisher,
     ):
         self._settings: Settings = settings
         self._feed_publisher: DataPublisher = _feed_publisher
@@ -53,4 +53,14 @@ class WebSocketListener:
         data: dict[str, str] = json.loads(message)
         if "topic" not in data or "data" not in data:
             raise ValueError("Invalid message from telraam")
+
+        # Only let messages from the selected position source through
+        if "position" in data["topic"]:
+            topics = data["topic"].split("_", 1)
+            if len(topics) != 2:
+                raise ValueError("Invalid message from telraam")
+
+            if topics[1] != self._settings.position_source.name:
+                return
+
         await self._feed_publisher.publish(data["topic"], data["data"])

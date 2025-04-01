@@ -19,12 +19,17 @@ async def lifespan(_app: FastAPI):
     feed_publisher = await get_feed_publisher()
     admin_publisher = await get_admin_publisher()
 
-    asyncio.create_task(WebSocketListener(settings, feed_publisher, admin_publisher).start())
+    asyncio.create_task(
+        WebSocketListener(settings, feed_publisher, admin_publisher).start()
+    )
     asyncio.create_task(Fetcher(settings, feed_publisher, admin_publisher).fetch())
 
     await feed_publisher.publish("frozen", settings.site.freeze is not None)
     await feed_publisher.publish("message", settings.site.message)
-    await admin_publisher.publish("active-source", settings.source.dict())
+    await admin_publisher.publish("active-lap-source", settings.lap_source.dict())
+    await admin_publisher.publish(
+        "active-position-source", settings.position_source.dict()
+    )
 
     yield  # Signal that the startup can go ahead
 

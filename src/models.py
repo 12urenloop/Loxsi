@@ -11,6 +11,11 @@ class LapSource(BaseModel):
     name: str
 
 
+class PositionSource(BaseModel):
+    id: int
+    name: str
+
+
 class Team(BaseModel):
     id: int
     name: str
