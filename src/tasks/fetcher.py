@@ -8,6 +8,7 @@ from src.models import Count, Lap, LapSource, Team
 from src.settings import Settings
 from src.tasks.task import Task
 from src.telraam import TelraamClient
+from src.storeman import Storeman
 
 
 class Fetcher(Task):
@@ -20,7 +21,9 @@ class Fetcher(Task):
         settings: Settings,
         feed_publisher: DataPublisher,
         admin_publisher: DataPublisher,
+        storeman: Storeman
     ):
+        self.storeman = storeman
         super().__init__(settings, feed_publisher, admin_publisher)
 
     async def fetch(self):
@@ -99,6 +102,8 @@ class Fetcher(Task):
                         ).model_dump()
                         for team in teams_by_id.values()
                     ]
+
+                    self.storeman.storeScores(counts)
 
                     await self._feed_publisher.publish("counts", counts)
                 except (ConnectError, AttributeError):

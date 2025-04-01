@@ -3,11 +3,14 @@ from starlette.templating import Jinja2Templates
 from src.data_publisher import DataPublisher
 from src.settings import Settings
 from src.websocket import WebSocketHandler, ConnectionTracker
+from src.storeman import Storeman
 
 _settings = Settings.load_from_yaml("config.yml")
 
 _feed_publisher = DataPublisher()
 _admin_publisher = DataPublisher()
+
+_storeman = Storeman(_feed_publisher)
 
 _connection_tracker = ConnectionTracker(_admin_publisher)
 
@@ -27,6 +30,9 @@ async def get_feed_publisher() -> DataPublisher:
 
 async def get_feed_handler() -> WebSocketHandler:
     return _feed_handler
+
+async def get_storeman() -> Storeman:
+    return _storeman
 
 
 async def get_admin_publisher() -> DataPublisher:
