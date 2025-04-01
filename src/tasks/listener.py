@@ -57,6 +57,8 @@ class WebSocketListener:
         # Only let messages from the selected position source through
         if data["topic"] == "position":
             position_data = data["data"]
+            if position_data == None:
+                return
             if "positioner" not in position_data or "positions" not in position_data:
                 raise ValueError("Invalid message from telraam")
 
