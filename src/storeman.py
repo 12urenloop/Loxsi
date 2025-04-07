@@ -12,7 +12,7 @@ class Storeman:
         self._feed_publisher: DataPublisher = feed_publisher
         self.logger = logging.getLogger("uvicorn")
 
-    def storeScores(self, counts: list[dict]):
+    async def storeScores(self, counts: list[dict]):
         if self.lastSave and self.lastSave > (datetime.now() - timedelta(minutes=10)):
             return
         self.lastSave = datetime.now()
