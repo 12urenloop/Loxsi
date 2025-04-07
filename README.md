@@ -19,15 +19,26 @@ admin:
   password: <password>
 ```
 
-### Active LapSource
+### Active Lap Sources
 
 In the following segment you can configure the current lap source.
 When this is changed on the admin panel the config will change accordingly.
 
 ```yaml
-source:
-  id: <telraam lapsource id>
-  name: <lapsource name> # Optional
+lap_source:
+  id: <telraam lap source id>
+  name: <lap source name> # Optional
+```
+
+### Active Position Sources
+
+In the following segment you can configure the current position source.
+When this is changed on the admin panel the config will change accordingly.
+
+```yaml
+position_source:
+  id: <telraam position source id>
+  name: <position source name> # Optional
 ```
 
 # Running

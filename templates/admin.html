@@ -14,10 +14,12 @@
     <div class="col l6 m6 s6">
       <div class="tui-window" style="margin-bottom: 20px; width: 100%">
         <fieldset class="tui-fieldset">
-          <legend>Active Source</legend>
-          <span class="tui-fieldset-text right"></span>
-          <div id="active-source">
-            Loading...
+          <legend>Active Sources</legend>
+          <div>
+            Lap: <span id="active-lap-source">Loading...</span>
+          </div>
+          <div>
+            Position: <span id="active-position-source">Loading...</span>
           </div>
         </fieldset>
       </div>
@@ -91,14 +93,26 @@
         </div>
       </div>
     </div>
-    <div class="col l12 m12 s12">
+    <div class="col l6 m12 s12">
       <div class="tui-window" style="margin-bottom: 20px; width: 100%">
         <fieldset class="tui-fieldset">
-          <legend class="center" id="window-title">Source</legend>
+          <legend class="center" id="window-title">Lap Source</legend>
           <div>
-            Select a source to use for Loxsi data
+            Select a source to use for <span class="orange-168-text">lap</span> data
             <hr class="tui-divider" style="margin-top: 20px">
-            <div class="row" id="sources"></div>
+            <div class="row" id="lap_sources"></div>
+          </div>
+        </fieldset>
+      </div>
+    </div>
+    <div class="col l6 m12 s12">
+      <div class="tui-window" style="margin-bottom: 20px; width: 100%">
+        <fieldset class="tui-fieldset">
+          <legend class="center" id="window-title">Position Source</legend>
+          <div>
+            Select a source to use for <span class="orange-168-text">position</span> data
+            <hr class="tui-divider" style="margin-top: 20px">
+            <div class="row" id="position_sources"></div>
           </div>
         </fieldset>
       </div>
