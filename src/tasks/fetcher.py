@@ -91,7 +91,7 @@ class Fetcher(Task):
                         for team in teams_by_id.values()
                     ]
 
-                    self.storeman.storeScores(counts)
+                    asyncio.create_task(self.storeman.storeScores(counts))
 
                     await self._feed_publisher.publish("counts", counts)
                 except (ConnectError, AttributeError):
