@@ -2,7 +2,7 @@
 
 # Setup
 
-Make sure you have docker and docker compose
+Make sure you have docker, docker compose & uv
 
 ## Configure
 
@@ -43,7 +43,7 @@ position_source:
 
 # Running
 
-Access at `http://localhost:8080`
+Access at `http://localhost:8000`
 
 ## Development
 
@@ -51,6 +51,14 @@ The development container supports hot reloading.
 
 ```bash
 docker-compose -f docker-compose.dev.yml up
+```
+
+or run it locally
+
+```bash
+uv venv
+source .venv/bin/activate
+uv run fastapi dev
 ```
 
 ## Production

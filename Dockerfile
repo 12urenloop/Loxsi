@@ -1,19 +1,12 @@
-FROM python:3.12-alpine3.19 as requirements
+FROM python:3.12-alpine
 
-RUN pip install poetry-plugin-export
+# Install uv.
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-WORKDIR /loxsi
+# Copy the application into the container.
+COPY . /app
 
-COPY pyproject.toml poetry.lock ./
+# Install the application dependencies.
+WORKDIR /app
+RUN uv sync --frozen --no-cache
 
-RUN poetry export --without-hashes --format=requirements.txt > requirements.txt
-
-FROM python:3.12-alpine3.19
-
-WORKDIR /loxsi
-
-COPY --from=requirements /loxsi/requirements.txt .
-
-RUN pip install -r requirements.txt
-
-COPY . .
