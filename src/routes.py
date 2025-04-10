@@ -47,6 +47,7 @@ async def _post_lap_source(
     lap_source_id: int,
     settings: Annotated[Settings, Depends(get_settings)],
     admin_publisher: Annotated[DataPublisher, Depends(get_admin_publisher)],
+    feed_publisher: Annotated[DataPublisher, Depends(get_feed_publisher)],
 ):
     try:
         lap_sources: list[dict]
@@ -67,6 +68,8 @@ async def _post_lap_source(
             raise HTTPException(
                 status_code=HTTP_409_CONFLICT, detail="Invalid LapSource Id"
             )
+
+        await feed_publisher.publish("refresh", True)
         return ["ok"]
     except httpx.ConnectError:
         await admin_publisher.publish("telraam-health", "bad")
@@ -80,6 +83,7 @@ async def _post_position_source(
     position_source_id: int,
     settings: Annotated[Settings, Depends(get_settings)],
     admin_publisher: Annotated[DataPublisher, Depends(get_admin_publisher)],
+    feed_publisher: Annotated[DataPublisher, Depends(get_feed_publisher)],
 ):
     try:
         position_sources: list[dict]
@@ -102,6 +106,7 @@ async def _post_position_source(
             raise HTTPException(
                 status_code=HTTP_409_CONFLICT, detail="Invalid PositionSource Id"
             )
+        await feed_publisher.publish("refresh", True)
         return ["ok"]
     except httpx.ConnectError:
         await admin_publisher.publish("telraam-health", "bad")

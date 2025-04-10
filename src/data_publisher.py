@@ -1,6 +1,8 @@
 from asyncio import Lock, Queue
 from typing import Any
 
+from src.settings import Settings
+
 JsonData = str | int | float | dict | list
 
 
@@ -60,8 +62,9 @@ class DataPublisher(QueueManager):
     Also provides a way to publish data to topics. This way one queue can easily be used for multiple data updates.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, settings: Settings) -> None:
         super().__init__()
+        self._settings = settings
         self._cache: dict[str, Any] = dict()
         self._cache["position"] = {}
         self._publish_lock: Lock = Lock()
@@ -81,7 +84,17 @@ class DataPublisher(QueueManager):
             for topic in self._cache:
                 if topic != "position":
                     await queue.put((topic, self._cache[topic]))
-            position_data = [self._cache["position"][team_id] for team_id in self._cache["position"]]
+
+            position_data = []
+            if self._settings.position_source.name in self._cache["position"]:
+                position_data = [
+                    self._cache["position"][self._settings.position_source.name][
+                        team_id
+                    ]
+                    for team_id in self._cache["position"][
+                        self._settings.position_source.name
+                    ]
+                ]
             await queue.put(("position", position_data))
         return queue
 
@@ -95,9 +108,17 @@ class DataPublisher(QueueManager):
         """
         async with self._publish_lock:
             if topic == "position":
-                for team_data in data:
-                    self._cache[topic][team_data["team_id"]] = team_data
-                await self._broadcast((topic, data))
+                position_source = data["positioner"]
+                if position_source not in self._cache[topic]:
+                    self._cache[topic][position_source] = {}
+
+                for team_data in data["positions"]:
+                    self._cache[topic][position_source][team_data["team_id"]] = (
+                        team_data
+                    )
+
+                if position_source == self._settings.position_source.name:
+                    await self._broadcast((topic, data["positions"]))
                 return
 
             if topic in self._cache and self._cache[topic] == data:
