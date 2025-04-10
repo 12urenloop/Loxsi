@@ -6,8 +6,8 @@ from src.websocket import WebSocketHandler, ConnectionTracker
 
 _settings = Settings.load_from_yaml("config.yml")
 
-_feed_publisher = DataPublisher()
-_admin_publisher = DataPublisher()
+_feed_publisher = DataPublisher(_settings)
+_admin_publisher = DataPublisher(_settings)
 
 _connection_tracker = ConnectionTracker(_admin_publisher)
 

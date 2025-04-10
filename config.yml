@@ -7,14 +7,14 @@ interval:
   fetch: 2
   websocket: 5
 lap_source:
-  id: 5
+  id: 8
   name: robust-lapper
 position_source:
-  id: 1
+  id: 6
   name: nostradamus
 site:
   freeze: null
-  message: test-message
+  message: null
 telraam:
-  api: http://localhost:8080
-  ws: ws://localhost:8080/ws
+  api: http://host.docker.internal:8080
+  ws: ws://host.docker.internal:8080/ws
