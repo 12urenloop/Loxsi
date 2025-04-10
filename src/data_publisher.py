@@ -118,7 +118,7 @@ class DataPublisher(QueueManager):
                     )
 
                 if position_source == self._settings.position_source.name:
-                    await self._broadcast((topic, data))
+                    await self._broadcast((topic, data["positions"]))
                 return
 
             if topic in self._cache and self._cache[topic] == data:
