@@ -56,7 +56,7 @@ telraam:
   ws: ws://host.docker.internal:8080/ws
 ```
 
-and start the containers with:
+and start the container with:
 
 ```bash
 docker-compose -f docker-compose.dev.yml up
