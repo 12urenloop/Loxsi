@@ -14,7 +14,7 @@ position_source:
   name: nostradamus
 site:
   freeze: null
-  message: test-message
+  message: null
 telraam:
   api: http://localhost:8080
   ws: ws://localhost:8080/ws

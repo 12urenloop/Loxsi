@@ -7,8 +7,8 @@ from src.storeman import Storeman
 
 _settings = Settings.load_from_yaml("config.yml")
 
-_feed_publisher = DataPublisher()
-_admin_publisher = DataPublisher()
+_feed_publisher = DataPublisher(_settings)
+_admin_publisher = DataPublisher(_settings)
 
 _storeman = Storeman(_feed_publisher)
 
