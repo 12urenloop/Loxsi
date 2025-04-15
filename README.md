@@ -48,6 +48,15 @@ Access at `http://localhost:8000`
 ## Development
 
 The development container supports hot reloading.
+Change the Telraam config to the following:
+
+```yaml
+telraam:
+  api: http://host.docker.internal:8080
+  ws: ws://host.docker.internal:8080/ws
+```
+
+and start the containers with:
 
 ```bash
 docker-compose -f docker-compose.dev.yml up
