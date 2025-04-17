@@ -1,4 +1,5 @@
 import asyncio
+import time
 import json
 
 from websockets import connect, InvalidHandshake
@@ -58,9 +59,13 @@ class WebSocketListener:
             position_data = data["data"]
             if position_data is None:
                 return
-
             if "positioner" not in position_data or "positions" not in position_data:
                 raise ValueError("Invalid message from telraam")
+            if self._settings.site.freeze != None and self._settings.site.freeze < (time.time() * 1000):
+                for team_data in position_data["positions"]:
+                    team_data['progress'] = 0
+                    team_data['speed'] = 0
+                    team_data['acceleration'] = 0
 
             await self._feed_publisher.publish(data["topic"], position_data)
             return
