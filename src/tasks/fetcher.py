@@ -21,7 +21,7 @@ class Fetcher(Task):
         settings: Settings,
         feed_publisher: DataPublisher,
         admin_publisher: DataPublisher,
-        storeman: Storeman
+        storeman: Storeman,
     ):
         self.storeman = storeman
         super().__init__(settings, feed_publisher, admin_publisher)

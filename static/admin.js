@@ -148,6 +148,18 @@ async function forceClientRefresh() {
   })
 }
 
+async function sendPodium() {
+  await fetch('/api/podium', {
+    method: "POST",
+  })
+}
+
+async function clearPodium() {
+  await fetch('/api/podium_clear', {
+    method: "POST",
+  })
+}
+
 function setData(res) {
   if (!Array.isArray(res)) {
     console.error('Couldn\'t set teams bcs parsed WS data is not an array')
