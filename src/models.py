@@ -41,5 +41,11 @@ class FreezeTime(BaseModel):
     time: int
 
 
+class Podium(BaseModel):
+    team_id: int
+    rank: int
+    rounds: int
+
+
 class ConnectionCount(BaseModel):
     count: int

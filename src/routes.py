@@ -22,7 +22,14 @@ from src.dependecies import (
     get_admin_feed_handler,
     get_connection_tracker,
 )
-from src.models import FreezeTime, LapSource, Message, ConnectionCount, PositionSource
+from src.models import (
+    FreezeTime,
+    LapSource,
+    Message,
+    ConnectionCount,
+    Podium,
+    PositionSource,
+)
 from src.settings import Settings
 from src.telraam import TelraamClient
 from src.websocket import WebSocketHandler, ConnectionTracker
@@ -40,6 +47,37 @@ async def _force_client_refresh(
     feed_publisher: Annotated[DataPublisher, Depends(get_feed_publisher)],
 ):
     await feed_publisher.publish("refresh", True)
+
+
+@router.post("/api/podium", dependencies=[Depends(is_admin)])
+async def _podium(
+    settings: Annotated[Settings, Depends(get_settings)],
+    admin_publisher: Annotated[DataPublisher, Depends(get_admin_publisher)],
+    feed_publisher: Annotated[DataPublisher, Depends(get_feed_publisher)],
+):
+    try:
+        async with TelraamClient(settings, admin_publisher) as client:
+            podium_raw: list[dict]
+            podium_raw = await client.get_podium()
+            podium = [
+                Podium(
+                    **{"team_id": p["teamId"], "rank": p["rank"], "rounds": p["rounds"]}
+                )
+                for p in podium_raw
+            ]
+            await feed_publisher.publish("podium", [p.model_dump() for p in podium])
+    except httpx.ConnectError:
+        await admin_publisher.publish("telraam-health", "bad")
+        raise HTTPException(
+            status_code=HTTP_502_BAD_GATEWAY, detail="Can't reach  data server"
+        )
+
+
+@router.post("/api/podium_clear", dependencies=[Depends(is_admin)])
+async def _podium_clear(
+    feed_publisher: Annotated[DataPublisher, Depends(get_feed_publisher)],
+):
+    await feed_publisher.publish("podium", [])
 
 
 @router.post("/api/lap/use/{lap_source_id}", dependencies=[Depends(is_admin)])

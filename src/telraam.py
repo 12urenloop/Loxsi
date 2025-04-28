@@ -35,3 +35,6 @@ class TelraamClient(AsyncClient):
 
     async def get_accepted_laps(self) -> list[dict]:
         return await self._get("accepted-laps")
+
+    async def get_podium(self) -> list[dict]:
+        return await self._get("podium")
