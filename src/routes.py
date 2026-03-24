@@ -230,7 +230,7 @@ async def _admin(
     request: Request,
     templates: Annotated[Jinja2Templates, Depends(get_templates)],
 ):
-    return templates.TemplateResponse("admin.html", {"request": request})
+    return templates.TemplateResponse(request, "admin.html")
 
 
 @router.websocket("/feed")
